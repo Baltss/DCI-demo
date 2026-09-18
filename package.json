@@ -1,0 +1,15 @@
+{
+  "name": "dci-demo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Demo de frontend del Sistema de Gestion de Casos DCI (Direccion de Comercio Interior - Defensa del Consumidor, Tucuman)",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
