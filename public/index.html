@@ -1,0 +1,2037 @@
+<title>Gestión de Casos DCI</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@500;600;700;800&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+
+<style>
+  :root{
+    --bg:#F2F4F8; --surface:#FFFFFF; --surface-2:#F6F8FA; --surface-hover:#EEF2F7;
+    --border:#E0E4EB; --border-strong:#C9D0DA;
+    --text:#171B24; --text-muted:#5B6472; --text-faint:#8891A0;
+    --primary:#123A6B; --primary-2:#1F4E8C; --primary-tint:#E8EEF7;
+    --accent:#C81E2C; --accent-2:#A5121F; --accent-tint:#FBE8E9;
+    --success:#1F8A5F; --success-tint:#E3F5EC;
+    --warning:#B9750E; --warning-tint:#FBF0DE;
+    --danger:#C0432B; --danger-tint:#FAEAE5;
+    --info:#2F6FB0; --info-tint:#E7EFF9;
+    --shadow-sm: 0 1px 2px rgba(20,30,50,0.06), 0 1px 1px rgba(20,30,50,0.04);
+    --shadow-md: 0 4px 16px rgba(20,30,50,0.10), 0 2px 6px rgba(20,30,50,0.06);
+    --radius-sm:6px; --radius-md:10px; --radius-lg:16px;
+    --font-display:'Libre Franklin', 'Segoe UI', sans-serif;
+    --font-body:'Public Sans', 'Segoe UI', sans-serif;
+    --font-mono:'JetBrains Mono', ui-monospace, monospace;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0E1420; --surface:#161D2B; --surface-2:#1B2333; --surface-hover:#212B3D;
+      --border:#2A3448; --border-strong:#3A4660;
+      --text:#E8EBF2; --text-muted:#A6AFC2; --text-faint:#6E7890;
+      --primary:#5C8FD6; --primary-2:#7CA6E0; --primary-tint:#1A2A42;
+      --accent:#E8606A; --accent-2:#F08088; --accent-tint:#3A1C20;
+      --success:#46C08A; --success-tint:#0F2E22;
+      --warning:#E2AC4C; --warning-tint:#332811;
+      --danger:#E37E5F; --danger-tint:#33201A;
+      --info:#6DA3DD; --info-tint:#16263A;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.4);
+      --shadow-md: 0 6px 20px rgba(0,0,0,0.45);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0E1420; --surface:#161D2B; --surface-2:#1B2333; --surface-hover:#212B3D;
+    --border:#2A3448; --border-strong:#3A4660;
+    --text:#E8EBF2; --text-muted:#A6AFC2; --text-faint:#6E7890;
+    --primary:#5C8FD6; --primary-2:#7CA6E0; --primary-tint:#1A2A42;
+    --accent:#E8606A; --accent-2:#F08088; --accent-tint:#3A1C20;
+    --success:#46C08A; --success-tint:#0F2E22;
+    --warning:#E2AC4C; --warning-tint:#332811;
+    --danger:#E37E5F; --danger-tint:#33201A;
+    --info:#6DA3DD; --info-tint:#16263A;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.4);
+    --shadow-md: 0 6px 20px rgba(0,0,0,0.45);
+    color-scheme: dark;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    background:var(--bg); color:var(--text); font-family:var(--font-body);
+    font-size:14px; line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4{ font-family:var(--font-display); font-weight:700; letter-spacing:-0.01em; margin:0; text-wrap:balance; color:var(--text);}
+  .mono{ font-family:var(--font-mono); font-variant-numeric:tabular-nums; }
+  a{ color:inherit; }
+  button{ font-family:inherit; }
+  ::selection{ background:var(--primary-tint); }
+
+  /* ---------- App shell ---------- */
+  #root{ min-height:100%; }
+  .app{ display:flex; min-height:100vh; }
+
+  .sidebar{
+    width:232px; flex:none; background:var(--primary);
+    background-image: linear-gradient(180deg, var(--primary) 0%, var(--accent-2) 480%);
+    color:#EAF1FC; display:flex; flex-direction:column; position:sticky; top:0; height:100vh;
+    padding-top:env(safe-area-inset-top,0px);
+  }
+  :root[data-theme="dark"] .sidebar, :root:not([data-theme="light"]) .sidebar{
+    background:#0B1220; background-image:none; border-right:1px solid var(--border);
+  }
+  .brand{ display:flex; align-items:center; gap:10px; padding:18px 16px 14px; border-bottom:1px solid rgba(255,255,255,0.14); }
+  .brand img{ width:38px; height:38px; border-radius:8px; object-fit:cover; box-shadow:var(--shadow-sm); }
+  .brand-text{ display:flex; flex-direction:column; line-height:1.15; }
+  .brand-text b{ font-family:var(--font-display); font-size:15px; font-weight:800; letter-spacing:0.01em; }
+  .brand-text span{ font-size:10.5px; color:#C7D6EE; letter-spacing:0.03em; text-transform:uppercase; }
+
+  .nav{ padding:14px 10px; display:flex; flex-direction:column; gap:2px; flex:1; overflow-y:auto; }
+  .nav-label{ font-size:10.5px; text-transform:uppercase; letter-spacing:0.08em; color:#9FB3D4; padding:14px 10px 6px; font-weight:700; }
+  .nav-item{
+    display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:var(--radius-sm);
+    color:#D9E4F5; text-decoration:none; cursor:pointer; font-size:13.5px; font-weight:600; border:none; background:none; width:100%; text-align:left;
+  }
+  .nav-item:hover{ background:rgba(255,255,255,0.08); color:#fff; }
+  .nav-item.active{ background:rgba(255,255,255,0.16); color:#fff; box-shadow: inset 3px 0 0 var(--accent); }
+  .nav-item .ico{ width:17px; height:17px; flex:none; opacity:0.9; }
+  .nav-badge{ margin-left:auto; background:var(--accent); color:#fff; font-size:10.5px; font-weight:700; border-radius:20px; padding:1px 7px; }
+
+  .sidebar-foot{ padding:12px 16px 16px; border-top:1px solid rgba(255,255,255,0.14); }
+  .demo-pill{ display:inline-flex; align-items:center; gap:6px; font-size:10.5px; font-weight:700; letter-spacing:0.05em; color:#0B1220; background:#F0C24B; padding:3px 8px; border-radius:20px; text-transform:uppercase; }
+  .role-row{ display:flex; align-items:center; gap:8px; margin-top:10px; }
+  .role-avatar{ width:26px; height:26px; border-radius:50%; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:11px; flex:none; }
+  .role-name{ font-size:12.5px; font-weight:700; color:#fff; }
+  .role-tag{ font-size:10.5px; color:#B7C8E5; }
+
+  .main{ flex:1; min-width:0; display:flex; flex-direction:column; }
+  .topbar{
+    position:sticky; top:0; z-index:5; background:var(--surface); border-bottom:1px solid var(--border);
+    display:flex; align-items:center; gap:14px; padding:12px 22px; padding-top:calc(12px + env(safe-area-inset-top,0px));
+  }
+  .topbar h1{ font-size:18px; }
+  .topbar .subtitle{ font-size:12.5px; color:var(--text-muted); font-weight:500; margin-top:1px; }
+  .search{
+    margin-left:auto; display:flex; align-items:center; gap:8px; background:var(--surface-2); border:1px solid var(--border);
+    border-radius:var(--radius-sm); padding:7px 12px; width:280px; max-width:38vw;
+  }
+  .search input{ border:none; background:none; outline:none; font-size:13px; color:var(--text); width:100%; font-family:inherit; }
+  .search svg{ width:15px; height:15px; color:var(--text-faint); flex:none; }
+
+  .content{ flex:1; padding:22px; max-width:1360px; width:100%; margin:0 auto; }
+
+  /* ---------- Buttons ---------- */
+  .btn{
+    display:inline-flex; align-items:center; gap:7px; border-radius:var(--radius-sm); border:1px solid var(--border-strong);
+    background:var(--surface); color:var(--text); font-size:13px; font-weight:600; padding:8px 14px; cursor:pointer;
+    transition:background .12s, border-color .12s; white-space:nowrap;
+  }
+  .btn:hover{ background:var(--surface-hover); }
+  .btn svg{ width:14px; height:14px; }
+  .btn-primary{ background:var(--primary); border-color:var(--primary); color:#fff; }
+  .btn-primary:hover{ background:var(--primary-2); border-color:var(--primary-2); }
+  .btn-accent{ background:var(--accent); border-color:var(--accent); color:#fff; }
+  .btn-accent:hover{ background:var(--accent-2); border-color:var(--accent-2); }
+  .btn-ghost{ background:transparent; border-color:transparent; }
+  .btn-ghost:hover{ background:var(--surface-hover); }
+  .btn-sm{ padding:5px 10px; font-size:12px; }
+  .btn:disabled{ opacity:0.5; cursor:not-allowed; }
+  .btn-block{ width:100%; justify-content:center; }
+
+  /* ---------- Cards / surfaces ---------- */
+  .card{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); }
+  .card-pad{ padding:18px; }
+  .section-title{ font-size:14.5px; font-weight:700; font-family:var(--font-display); display:flex; align-items:center; gap:8px; }
+  .section-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:10px; flex-wrap:wrap;}
+  .grid{ display:grid; gap:16px; }
+  .cols-4{ grid-template-columns:repeat(4,1fr); }
+  .cols-3{ grid-template-columns:repeat(3,1fr); }
+  .cols-2{ grid-template-columns:repeat(2,1fr); }
+  @media (max-width:1000px){ .cols-4{grid-template-columns:repeat(2,1fr);} .cols-3{grid-template-columns:repeat(2,1fr);} }
+  @media (max-width:620px){ .cols-4,.cols-3,.cols-2{grid-template-columns:1fr;} }
+
+  /* ---------- KPI tile ---------- */
+  .kpi{ padding:16px; }
+  .kpi-top{ display:flex; align-items:center; justify-content:space-between; }
+  .kpi-label{ font-size:12px; color:var(--text-muted); font-weight:600; }
+  .kpi-icon{ width:30px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex:none; }
+  .kpi-icon svg{ width:16px; height:16px; }
+  .kpi-value{ font-family:var(--font-display); font-size:27px; font-weight:800; margin-top:8px; font-variant-numeric:tabular-nums; }
+  .kpi-sub{ font-size:11.5px; color:var(--text-faint); margin-top:3px; }
+
+  /* ---------- Badges / pills ---------- */
+  .badge{ display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:700; padding:3px 9px; border-radius:20px; white-space:nowrap; line-height:1.4; }
+  .badge svg{ width:10px; height:10px; }
+  .badge-dot{ width:6px; height:6px; border-radius:50%; flex:none; }
+  .b-info{ background:var(--info-tint); color:var(--info); }
+  .b-primary{ background:var(--primary-tint); color:var(--primary); }
+  .b-success{ background:var(--success-tint); color:var(--success); }
+  .b-warning{ background:var(--warning-tint); color:var(--warning); }
+  .b-danger{ background:var(--danger-tint); color:var(--danger); }
+  .b-accent{ background:var(--accent-tint); color:var(--accent); }
+  .b-neutral{ background:var(--surface-2); color:var(--text-muted); border:1px solid var(--border); }
+
+  /* ---------- Table ---------- */
+  .table-wrap{ overflow-x:auto; border-radius:var(--radius-md); border:1px solid var(--border); background:var(--surface); }
+  table{ border-collapse:collapse; width:100%; min-width:860px; }
+  thead th{ text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:0.04em; color:var(--text-faint); font-weight:700; padding:11px 14px; background:var(--surface-2); border-bottom:1px solid var(--border); white-space:nowrap; }
+  tbody td{ padding:12px 14px; border-bottom:1px solid var(--border); font-size:13px; vertical-align:middle; }
+  tbody tr:last-child td{ border-bottom:none; }
+  tbody tr{ cursor:pointer; transition:background .1s; }
+  tbody tr:hover{ background:var(--surface-hover); }
+  .cell-strong{ font-weight:700; }
+  .cell-muted{ color:var(--text-muted); font-size:12.5px; }
+  th.sortable{ cursor:pointer; user-select:none; }
+  th.sortable:hover{ color:var(--text); }
+  th.sortable .arrow{ margin-left:4px; opacity:0.6; }
+
+  /* ---------- Forms ---------- */
+  .field{ display:flex; flex-direction:column; gap:5px; }
+  .field label{ font-size:12px; font-weight:700; color:var(--text-muted); }
+  .field .hint{ font-size:11px; color:var(--text-faint); font-weight:500; margin-top:-2px; }
+  .field input[type=text], .field input[type=number], .field input[type=date], .field input[type=tel], .field select, .field textarea{
+    border:1px solid var(--border-strong); background:var(--surface); color:var(--text); border-radius:var(--radius-sm);
+    padding:9px 11px; font-size:13.5px; font-family:inherit; outline:none; width:100%;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{ border-color:var(--primary); box-shadow:0 0 0 3px var(--primary-tint); }
+  .field textarea{ resize:vertical; min-height:90px; line-height:1.5; }
+  .checkline{ display:flex; align-items:center; gap:8px; font-size:13px; padding:6px 0; cursor:pointer; }
+  .checkline input{ width:15px; height:15px; accent-color:var(--primary); flex:none; }
+  .check-grid{ display:grid; grid-template-columns:1fr 1fr; gap:0 14px; }
+  @media (max-width:560px){ .check-grid{ grid-template-columns:1fr; } }
+  .radio-cards{ display:flex; gap:10px; flex-wrap:wrap; }
+  .radio-card{ border:1.5px solid var(--border-strong); border-radius:var(--radius-sm); padding:8px 14px; font-size:13px; font-weight:600; cursor:pointer; background:var(--surface); }
+  .radio-card.sel{ border-color:var(--primary); background:var(--primary-tint); color:var(--primary); }
+
+  .stepper{ display:flex; align-items:center; gap:0; margin-bottom:22px; }
+  .step{ display:flex; align-items:center; gap:9px; color:var(--text-faint); font-weight:700; font-size:12.5px; }
+  .step .num{ width:24px; height:24px; border-radius:50%; border:2px solid var(--border-strong); display:flex; align-items:center; justify-content:center; font-size:11.5px; }
+  .step.active{ color:var(--primary); }
+  .step.active .num{ border-color:var(--primary); background:var(--primary); color:#fff; }
+  .step.done .num{ border-color:var(--success); background:var(--success); color:#fff; }
+  .step.done{ color:var(--success); }
+  .step-line{ width:44px; height:2px; background:var(--border-strong); margin:0 8px; }
+
+  /* type picker */
+  .type-pick{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+  @media (max-width:760px){ .type-pick{ grid-template-columns:1fr; } }
+  .type-card{ border:1.5px solid var(--border); border-radius:var(--radius-md); padding:18px; cursor:pointer; background:var(--surface); text-align:left; }
+  .type-card:hover{ border-color:var(--primary-2); }
+  .type-card.sel{ border-color:var(--primary); background:var(--primary-tint); box-shadow:var(--shadow-sm); }
+  .type-card .ic{ width:36px; height:36px; border-radius:9px; display:flex; align-items:center; justify-content:center; margin-bottom:10px; }
+  .type-card h4{ font-size:14.5px; margin-bottom:4px; }
+  .type-card p{ font-size:12.5px; color:var(--text-muted); line-height:1.45; }
+
+  /* ---------- Tabs ---------- */
+  .tabs{ display:flex; gap:2px; border-bottom:1px solid var(--border); margin-bottom:18px; overflow-x:auto; }
+  .tab{ padding:10px 15px; font-size:13px; font-weight:700; color:var(--text-muted); cursor:pointer; border-bottom:2.5px solid transparent; white-space:nowrap; background:none; border-left:none;border-right:none;border-top:none; }
+  .tab.active{ color:var(--primary); border-bottom-color:var(--primary); }
+
+  /* ---------- Timeline ---------- */
+  .timeline{ position:relative; padding-left:26px; }
+  .timeline::before{ content:''; position:absolute; left:8px; top:4px; bottom:4px; width:2px; background:var(--border); }
+  .tl-item{ position:relative; padding-bottom:20px; }
+  .tl-item:last-child{ padding-bottom:0; }
+  .tl-dot{ position:absolute; left:-26px; top:2px; width:17px; height:17px; border-radius:50%; background:var(--surface); border:2.5px solid var(--primary); }
+  .tl-head{ display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
+  .tl-title{ font-weight:700; font-size:13px; }
+  .tl-date{ font-size:11.5px; color:var(--text-faint); }
+  .tl-body{ font-size:12.5px; color:var(--text-muted); margin-top:3px; line-height:1.5; }
+  .tl-meta{ display:flex; gap:12px; margin-top:6px; flex-wrap:wrap; }
+  .tl-meta span{ font-size:11.5px; color:var(--text-faint); }
+  .tl-meta b{ color:var(--text-muted); font-weight:600; }
+
+  /* ---------- Modal ---------- */
+  .modal-overlay{ position:fixed; inset:0; background:rgba(12,16,26,0.55); display:flex; align-items:flex-start; justify-content:center; padding:5vh 16px; z-index:50; overflow-y:auto; }
+  .modal{ background:var(--surface); border-radius:var(--radius-lg); width:100%; max-width:640px; box-shadow:var(--shadow-md); border:1px solid var(--border); }
+  .modal-head{ display:flex; align-items:center; justify-content:space-between; padding:18px 22px; border-bottom:1px solid var(--border); }
+  .modal-head h3{ font-size:16px; }
+  .modal-body{ padding:20px 22px; max-height:65vh; overflow-y:auto; display:flex; flex-direction:column; gap:14px; }
+  .modal-foot{ display:flex; justify-content:flex-end; gap:10px; padding:16px 22px; border-top:1px solid var(--border); }
+  .icon-btn{ width:28px; height:28px; border-radius:7px; display:flex; align-items:center; justify-content:center; border:none; background:none; cursor:pointer; color:var(--text-muted); }
+  .icon-btn:hover{ background:var(--surface-hover); color:var(--text); }
+  .icon-btn svg{ width:16px; height:16px; }
+
+  /* ---------- Alerts / list rows ---------- */
+  .alert-row{ display:flex; align-items:flex-start; gap:11px; padding:11px 4px; border-bottom:1px solid var(--border); }
+  .alert-row:last-child{ border-bottom:none; }
+  .alert-ic{ width:30px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex:none; }
+  .alert-ic svg{ width:15px; height:15px; }
+  .alert-title{ font-size:13px; font-weight:700; }
+  .alert-sub{ font-size:12px; color:var(--text-muted); margin-top:2px; }
+  .empty-state{ text-align:center; padding:34px 20px; color:var(--text-faint); }
+  .empty-state svg{ width:30px; height:30px; margin-bottom:8px; opacity:0.6; }
+
+  /* filters bar */
+  .filters{ display:flex; flex-wrap:wrap; gap:9px; align-items:center; }
+  .filters select, .filters input{ border:1px solid var(--border-strong); background:var(--surface); border-radius:var(--radius-sm); padding:7px 10px; font-size:12.5px; color:var(--text); font-family:inherit; }
+  .chip{ display:inline-flex; align-items:center; gap:5px; background:var(--primary-tint); color:var(--primary); font-size:11.5px; font-weight:700; padding:4px 9px; border-radius:20px; }
+  .chip button{ background:none; border:none; cursor:pointer; color:inherit; display:flex; padding:0; }
+  .chip svg{ width:10px; height:10px; }
+
+  /* endeudamiento priority bar */
+  .prio-bar-track{ background:var(--surface-2); border-radius:20px; height:7px; width:100%; overflow:hidden; }
+  .prio-bar-fill{ height:100%; border-radius:20px; }
+
+  .toast{ position:fixed; bottom:22px; right:22px; background:var(--text); color:var(--bg); padding:12px 18px; border-radius:var(--radius-sm); font-size:13px; font-weight:600; box-shadow:var(--shadow-md); z-index:80; display:flex; align-items:center; gap:9px; }
+  :root[data-theme="dark"] .toast, :root:not([data-theme="light"]) .toast{ background:var(--surface-2); color:var(--text); border:1px solid var(--border); }
+  .toast svg{ width:15px; height:15px; color:var(--success); flex:none; }
+
+  .divider{ height:1px; background:var(--border); margin:16px 0; }
+  .link-btn{ background:none; border:none; color:var(--primary); font-weight:700; font-size:12.5px; cursor:pointer; padding:0; }
+  .muted{ color:var(--text-muted); }
+  .small{ font-size:12px; }
+  .breadcrumb{ font-size:12.5px; color:var(--text-muted); display:flex; align-items:center; gap:6px; margin-bottom:6px; }
+  .breadcrumb button{ background:none;border:none;color:var(--primary);font-weight:700;cursor:pointer;font-size:12.5px;padding:0; }
+
+  ::-webkit-scrollbar{ width:9px; height:9px; }
+  ::-webkit-scrollbar-thumb{ background:var(--border-strong); border-radius:20px; }
+  ::-webkit-scrollbar-track{ background:transparent; }
+
+  @media (max-width:840px){
+    .sidebar{ position:fixed; z-index:40; transform:translateX(-100%); transition:transform .18s; }
+    .sidebar.open{ transform:translateX(0); }
+    .menu-toggle{ display:flex !important; }
+  }
+  .menu-toggle{ display:none; }
+</style>
+
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+const {useState, useMemo, useEffect, useRef} = React;
+
+/* ============================== ICONS ============================== */
+const Icon = ({d, children, ...p}) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}>
+    {children}
+  </svg>
+);
+const IcHome = p => <Icon {...p}><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></Icon>;
+const IcFolder = p => <Icon {...p}><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></Icon>;
+const IcPlus = p => <Icon {...p}><path d="M12 5v14M5 12h14"/></Icon>;
+const IcAlert = p => <Icon {...p}><path d="M10.3 3.9 1.9 18a2 2 0 0 0 1.7 3h16.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></Icon>;
+const IcChart = p => <Icon {...p}><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/></Icon>;
+const IcSearch = p => <Icon {...p}><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></Icon>;
+const IcCase = p => <Icon {...p}><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M3 12h18"/></Icon>;
+const IcCoin = p => <Icon {...p}><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 9.5c0-1.4 1.3-2.5 3-2.5s3 1.1 3 2.2-1.2 1.8-3 2.3-3 1.2-3 2.3 1.3 2.2 3 2.2 3-1.1 3-2.5"/></Icon>;
+const IcClock = p => <Icon {...p}><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></Icon>;
+const IcCheck = p => <Icon {...p}><path d="M20 6 9 17l-5-5"/></Icon>;
+const IcX = p => <Icon {...p}><path d="M18 6 6 18M6 6l12 12"/></Icon>;
+const IcChevR = p => <Icon {...p}><path d="m9 6 6 6-6 6"/></Icon>;
+const IcChevL = p => <Icon {...p}><path d="m15 18-6-6 6-6"/></Icon>;
+const IcUsers = p => <Icon {...p}><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16.5 5.5a3.2 3.2 0 0 1 0 6.2"/><path d="M17.5 14a6 6 0 0 1 4 5.6"/></Icon>;
+const IcBuilding = p => <Icon {...p}><rect x="4" y="3" width="10" height="18" rx="1"/><rect x="14" y="8" width="6" height="13" rx="1"/><path d="M7 7h1M7 11h1M7 15h1M10 7h1M10 11h1M10 15h1"/></Icon>;
+const IcFlag = p => <Icon {...p}><path d="M6 3v18"/><path d="M6 4h11l-2.5 4L17 12H6"/></Icon>;
+const IcHistory = p => <Icon {...p}><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 7v5l3.5 2"/></Icon>;
+const IcSettings = p => <Icon {...p}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15 1.65 1.65 0 0 0 3.17 14H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.14.36.4.68.72.92" /></Icon>;
+const IcPaperclip = p => <Icon {...p}><path d="M21 12.4 12.3 21a5 5 0 0 1-7-7L14 5.3a3.5 3.5 0 0 1 5 5L10.6 18.7a2 2 0 0 1-3-3L15 8.4"/></Icon>;
+const IcLink = p => <Icon {...p}><path d="M9.5 14.5 14.5 9.5"/><path d="M11 6.5 12.4 5a4 4 0 0 1 5.6 5.6l-1.5 1.4"/><path d="M13 17.5 11.6 19a4 4 0 0 1-5.6-5.6l1.5-1.4"/></Icon>;
+const IcArrowUp = p => <Icon {...p}><path d="M12 19V5M5 12l7-7 7 7"/></Icon>;
+const IcArrowDown = p => <Icon {...p}><path d="M12 5v14M19 12l-7 7-7-7"/></Icon>;
+const IcRotate = p => <Icon {...p}><path d="M3 12a9 9 0 1 0 2.6-6.3"/><path d="M3 4v5h5"/></Icon>;
+const IcMenu = p => <Icon {...p}><path d="M4 7h16M4 12h16M4 17h16"/></Icon>;
+const IcGavel = p => <Icon {...p}><path d="m14 5 5 5"/><path d="m4 15 5 5"/><path d="M9.5 15.5 15.5 9.5"/><path d="m2 22 3-3"/><path d="M19.5 4.5 17 2 12 7l2.5 2.5z"/></Icon>;
+const IcDownload = p => <Icon {...p}><path d="M12 3v13m0 0-4-4m4 4 4-4"/><path d="M4 19h16"/></Icon>;
+const IcPhone = p => <Icon {...p}><path d="M4 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L14 13l5 2v4a2 2 0 0 1-2 2A15 15 0 0 1 4 6a2 2 0 0 1 0-2Z"/></Icon>;
+const IcMail = p => <Icon {...p}><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 6 8 7 8-7"/></Icon>;
+const IcMapPin = p => <Icon {...p}><path d="M12 21s7-6.4 7-12a7 7 0 1 0-14 0c0 5.6 7 12 7 12Z"/><circle cx="12" cy="9" r="2.5"/></Icon>;
+
+/* ============================== DATA / CONSTANTES ============================== */
+const CATEGORIAS = ["Banco","Tarjeta de crédito","Plan de ahorro","Comercio","Servicios","Otro"];
+const TIPOS = { expediente:"Expediente", extra_expediente:"Extra Expediente", endeudamiento:"Endeudamiento" };
+const RESPONSABLES = ["María Fernández","Carlos Ibáñez","Lucía Romero","Administrador"];
+const DOC_OPCIONES_GENERAL = ["DNI","Contrato / documentación contractual","Facturas / comprobantes","Resúmenes de cuenta","Comprobantes de pago","Constancias de reclamos","Comunicaciones / mensajes","Presupuestos / órdenes de compra"];
+const DOC_OPCIONES_DEUDA = ["Contratos / documentación de la deuda","Resúmenes de cuenta","Comprobantes de pago","Constancias de reclamos","Comunicaciones recibidas"];
+const ORIGEN_INGRESOS = ["Relación de dependencia","Trabajo independiente","Monotributo","Jubilación / Pensión","Asignación / Prestación social","Trabajo informal"];
+
+const ESTADO_LABEL = {
+  en_gestion:{label:"En gestión", cls:"b-info", dot:"var(--info)"},
+  cerrado:{label:"Cerrado", cls:"b-neutral", dot:"var(--text-faint)"},
+};
+const RESULTADO_LABEL = {
+  sin_acuerdo:{label:"Sin acuerdo aún", cls:"b-neutral"},
+  acuerdo_vigente:{label:"Acuerdo exitoso (vigente)", cls:"b-success"},
+  acuerdo_cumplido:{label:"Finalizado — acuerdo cumplido", cls:"b-success"},
+  incumplido_denunciante:{label:"Incumplimiento del denunciante", cls:"b-danger"},
+  incumplido_denunciado:{label:"Incumplimiento del denunciado", cls:"b-danger"},
+  rechazado:{label:"No corresponde a la DCI", cls:"b-neutral"},
+};
+
+function uid(prefix){ return prefix + "-" + Math.random().toString(36).slice(2,8); }
+function fmtDate(iso){ if(!iso) return "—"; const d = new Date(iso+"T00:00:00"); return d.toLocaleDateString("es-AR",{day:"2-digit",month:"2-digit",year:"numeric"}); }
+function fmtDateTime(iso){ const d = new Date(iso); return d.toLocaleDateString("es-AR",{day:"2-digit",month:"2-digit",year:"numeric"}) + " " + d.toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit"}); }
+function fmtMoney(n){ return "$ " + Math.round(n).toLocaleString("es-AR"); }
+function daysBetween(a,b){ const A=new Date(a+"T00:00:00"), B=b?new Date(b+"T00:00:00"):new Date(); return Math.round((B-A)/86400000); }
+const TODAY = "2026-09-18";
+
+/* ============================== MOCK DATA ============================== */
+function seedCasos(){
+  return [
+    {
+      id:"EXP-2026-0142", tipo:"expediente", numeroExpediente:"0142/2026", categoria:"Banco",
+      fechaIngreso:"2026-03-04", fechaResolucion:null, responsable:"María Fernández",
+      estadoOperativo:"en_gestion", resultadoAcuerdo:"sin_acuerdo",
+      denunciante:{nombre:"Rosa Elena Juárez", dni:"22.145.889", domicilio:"Av. Aconquija 1450", localidad:"Yerba Buena", celular:"381-155-4021"},
+      empresas:[{nombre:"Banco Macro S.A.", domicilio:"25 de Mayo 350", localidad:"San Miguel de Tucumán", celular:"0800-333-2265"}],
+      descargo:"La denunciante indica que le debitaron un seguro no contratado durante 8 meses en su caja de ahorro, pese a reclamos telefónicos reiterados sin respuesta formal del banco.",
+      documentacion:["DNI","Resúmenes de cuenta","Constancias de reclamos"], docOtra:"",
+      resolucionGestion:"", observaciones:"Se giró oficio al banco solicitando informe. Pendiente de respuesta.", funcionario:"María Fernández",
+      audiencias:[], casoVinculadoId:null,
+      historial:[
+        {id:uid("h"), fecha:"2026-03-04T10:12:00", usuario:"María Fernández", accion:"Ingreso de caso", estadoAnterior:null, estadoNuevo:"en_gestion", observaciones:"Ingresa por mesa de entradas con documentación completa.", contacto:"", resultado:"", proximaAccion:"Notificar al banco", fechaProximaAccion:"2026-03-18"},
+        {id:uid("h"), fecha:"2026-04-02T15:40:00", usuario:"María Fernández", accion:"Contacto realizado", estadoAnterior:"en_gestion", estadoNuevo:"en_gestion", observaciones:"Se envió cédula de notificación al banco solicitando descargo en 10 días hábiles.", contacto:"Cédula / correo postal", resultado:"Sin respuesta aún", proximaAccion:"Reiterar intimación", fechaProximaAccion:"2026-09-25"},
+      ],
+    },
+    {
+      id:"EXP-2026-0098", tipo:"expediente", numeroExpediente:"0098/2026", categoria:"Plan de ahorro",
+      fechaIngreso:"2026-02-10", fechaResolucion:"2026-05-22", responsable:"Carlos Ibáñez",
+      estadoOperativo:"cerrado", resultadoAcuerdo:"acuerdo_cumplido",
+      denunciante:{nombre:"Diego Armando Sosa", dni:"31.209.774", domicilio:"Mendoza 812", localidad:"San Miguel de Tucumán", celular:"381-154-8890"},
+      empresas:[{nombre:"Círculo de Inversores S.A.", domicilio:"9 de Julio 220", localidad:"San Miguel de Tucumán", celular:"381-421-0044"}],
+      descargo:"El consumidor había adherido a un plan de ahorro para vehículo 0km y solicitó la baja y devolución de lo aportado por no poder continuar con las cuotas.",
+      documentacion:["DNI","Contrato / documentación contractual","Comprobantes de pago"], docOtra:"",
+      resolucionGestion:"Resuelto en audiencia. La empresa acordó devolver el 100% de lo aportado en 3 cuotas iguales.", observaciones:"Cumplido en su totalidad, sin reclamos posteriores.", funcionario:"Carlos Ibáñez",
+      audiencias:[{numero:"AUD-0098-A","fecha":"2026-05-10"}], casoVinculadoId:null, resolucionMomento:"audiencia",
+      historial:[
+        {id:uid("h"), fecha:"2026-02-10T09:05:00", usuario:"Carlos Ibáñez", accion:"Ingreso de caso", estadoAnterior:null, estadoNuevo:"en_gestion", observaciones:"Ingresa caso formal.", contacto:"", resultado:"", proximaAccion:"Citar a audiencia", fechaProximaAccion:"2026-05-10"},
+        {id:uid("h"), fecha:"2026-05-10T11:00:00", usuario:"Carlos Ibáñez", accion:"Audiencia realizada", estadoAnterior:"en_gestion", estadoNuevo:"en_gestion", observaciones:"Se llega a acuerdo de devolución en 3 cuotas. Expediente de audiencia AUD-0098-A.", contacto:"Audiencia presencial", resultado:"Acuerdo alcanzado", proximaAccion:"Seguimiento de cuotas", fechaProximaAccion:"2026-06-10"},
+        {id:uid("h"), fecha:"2026-05-10T11:20:00", usuario:"Carlos Ibáñez", accion:"Cambio de estado", estadoAnterior:"sin_acuerdo", estadoNuevo:"acuerdo_vigente", observaciones:"Acuerdo homologado en audiencia.", contacto:"", resultado:"", proximaAccion:"", fechaProximaAccion:""},
+        {id:uid("h"), fecha:"2026-05-22T16:00:00", usuario:"Carlos Ibáñez", accion:"Cambio de estado", estadoAnterior:"acuerdo_vigente", estadoNuevo:"acuerdo_cumplido", observaciones:"Consumidor confirma haber recibido las 3 cuotas en tiempo y forma.", contacto:"Teléfono", resultado:"Acuerdo cumplido", proximaAccion:"", fechaProximaAccion:""},
+      ],
+    },
+    {
+      id:"EXT-2026-0231", tipo:"extra_expediente", numeroExpediente:null, categoria:"Plan de ahorro",
+      fechaIngreso:"2026-06-01", fechaResolucion:"2026-06-19", responsable:"Lucía Romero",
+      estadoOperativo:"cerrado", resultadoAcuerdo:"acuerdo_cumplido",
+      denunciante:{nombre:"Marta Beatriz Aguirre", dni:"18.997.402", domicilio:"Muñecas 980", localidad:"San Miguel de Tucumán", celular:"381-156-2231"},
+      empresas:[{nombre:"Volkswagen Plan de Ahorro (Concesionaria del Norte)", domicilio:"Av. Roca 2100", localidad:"San Miguel de Tucumán", celular:"381-424-1122"}],
+      descargo:"Quiere darse de baja del plan de ahorro y recuperar lo aportado porque cambió su situación económica.",
+      documentacion:["DNI","Contrato / documentación contractual"], docOtra:"",
+      resolucionGestion:"La concesionaria aceptó devolver el dinero en un único pago tras la gestión telefónica de la oficina.", observaciones:"Resuelto sin necesidad de expediente formal.", funcionario:"Lucía Romero",
+      audiencias:[], casoVinculadoId:null,
+      historial:[
+        {id:uid("h"), fecha:"2026-06-01T10:00:00", usuario:"Lucía Romero", accion:"Ingreso de caso", estadoAnterior:null, estadoNuevo:"en_gestion", observaciones:"Consumidor se acerca a la oficina.", contacto:"", resultado:"", proximaAccion:"Contactar a la concesionaria", fechaProximaAccion:"2026-06-05"},
+        {id:uid("h"), fecha:"2026-06-08T12:30:00", usuario:"Lucía Romero", accion:"Contacto realizado", estadoAnterior:"en_gestion", estadoNuevo:"en_gestion", observaciones:"Se contacta a la concesionaria, evalúan el caso.", contacto:"Teléfono", resultado:"En evaluación", proximaAccion:"Reiterar contacto", fechaProximaAccion:"2026-06-15"},
+        {id:uid("h"), fecha:"2026-06-19T09:40:00", usuario:"Lucía Romero", accion:"Cambio de estado", estadoAnterior:"sin_acuerdo", estadoNuevo:"acuerdo_cumplido", observaciones:"Empresa confirma transferencia realizada. Consumidor conforme.", contacto:"Email", resultado:"Devolución efectuada", proximaAccion:"", fechaProximaAccion:""},
+      ],
+    },
+    {
+      id:"EXT-2026-0344", tipo:"extra_expediente", numeroExpediente:null, categoria:"Comercio",
+      fechaIngreso:"2026-08-20", fechaResolucion:null, responsable:"Carlos Ibáñez",
+      estadoOperativo:"en_gestion", resultadoAcuerdo:"sin_acuerdo",
+      denunciante:{nombre:"Jorge Luis Paz", dni:"29.874.112", domicilio:"Las Piedras 455", localidad:"Tafí Viejo", celular:"381-153-9087"},
+      empresas:[{nombre:"Frávega Sucursal Tucumán", domicilio:"Av. Sarmiento 780", localidad:"San Miguel de Tucumán", celular:"381-430-5566"}],
+      descargo:"Compró un electrodoméstico que llegó con fallas y el comercio se niega al cambio pese a estar dentro de garantía.",
+      documentacion:["DNI","Facturas / comprobantes"], docOtra:"",
+      resolucionGestion:"", observaciones:"Primer contacto realizado, se espera respuesta del comercio.", funcionario:"Carlos Ibáñez",
+      audiencias:[], casoVinculadoId:null,
+      historial:[
+        {id:uid("h"), fecha:"2026-08-20T11:15:00", usuario:"Carlos Ibáñez", accion:"Ingreso de caso", estadoAnterior:null, estadoNuevo:"en_gestion", observaciones:"Consumidor presenta reclamo con factura.", contacto:"", resultado:"", proximaAccion:"Contactar al comercio", fechaProximaAccion:"2026-08-27"},
+        {id:uid("h"), fecha:"2026-08-28T10:05:00", usuario:"Carlos Ibáñez", accion:"Contacto realizado", estadoAnterior:"en_gestion", estadoNuevo:"en_gestion", observaciones:"Se llama al local, derivan a casa central.", contacto:"Teléfono", resultado:"Derivado a casa central", proximaAccion:"Enviar nota formal", fechaProximaAccion:"2026-09-20"},
+      ],
+    },
+    {
+      id:"EXT-2026-0298", tipo:"extra_expediente", numeroExpediente:null, categoria:"Servicios",
+      fechaIngreso:"2026-07-05", fechaResolucion:null, responsable:"María Fernández",
+      estadoOperativo:"en_gestion", resultadoAcuerdo:"acuerdo_vigente",
+      denunciante:{nombre:"Claudia Noemí Ríos", dni:"25.663.998", domicilio:"Congreso 233", localidad:"San Miguel de Tucumán", celular:"381-155-7712"},
+      empresas:[{nombre:"Personal Flow (Telecom Argentina)", domicilio:"Av. Mate de Luna 1900", localidad:"San Miguel de Tucumán", celular:"0800-555-1000"}],
+      descargo:"Le siguieron facturando un servicio de internet que había dado de baja hace 3 meses.",
+      documentacion:["DNI","Facturas / comprobantes","Comunicaciones / mensajes"], docOtra:"",
+      resolucionGestion:"La empresa reconoció el error y acordó anular la deuda y no facturar más.", observaciones:"En seguimiento hasta confirmar que no se generen nuevas facturas.", funcionario:"María Fernández",
+      audiencias:[], casoVinculadoId:null,
+      historial:[
+        {id:uid("h"), fecha:"2026-07-05T09:30:00", usuario:"María Fernández", accion:"Ingreso de caso", estadoAnterior:null, estadoNuevo:"en_gestion", observaciones:"", contacto:"", resultado:"", proximaAccion:"Contactar a la empresa", fechaProximaAccion:"2026-07-10"},
+        {id:uid("h"), fecha:"2026-07-15T14:00:00", usuario:"María Fernández", accion:"Cambio de estado", estadoAnterior:"sin_acuerdo", estadoNuevo:"acuerdo_vigente", observaciones:"Empresa se compromete a anular deuda y confirma la baja.", contacto:"Email", resultado:"Acuerdo alcanzado", proximaAccion:"Confirmar próxima factura", fechaProximaAccion:"2026-09-30"},
+      ],
+    },
+    {
+      id:"EXT-2026-0155", tipo:"extra_expediente", numeroExpediente:null, categoria:"Servicios",
+      fechaIngreso:"2026-04-14", fechaResolucion:null, responsable:"Lucía Romero",
+      estadoOperativo:"en_gestion", resultadoAcuerdo:"incumplido_denunciado",
+      denunciante:{nombre:"Héctor Ramón Vega", dni:"20.554.332", domicilio:"Junín 611", localidad:"Banda del Río Salí", celular:"381-154-3321"},
+      empresas:[{nombre:"EDET S.A.", domicilio:"San Lorenzo 21", localidad:"San Miguel de Tucumán", celular:"0800-777-3383"}],
+      descargo:"Reclama por facturación de energía muy superior al consumo habitual, sin que se haya revisado el medidor.",
+      documentacion:["Facturas / comprobantes","Constancias de reclamos"], docOtra:"",
+      resolucionGestion:"", observaciones:"La empresa se había comprometido a revisar el medidor y no lo hizo, se reabre gestión.", funcionario:"Lucía Romero",
+      audiencias:[], casoVinculadoId:null,
+      historial:[
+        {id:uid("h"), fecha:"2026-04-14T09:00:00", usuario:"Lucía Romero", accion:"Ingreso de caso", estadoAnterior:null, estadoNuevo:"en_gestion", observaciones:"", contacto:"", resultado:"", proximaAccion:"Contactar a EDET", fechaProximaAccion:"2026-04-20"},
+        {id:uid("h"), fecha:"2026-04-25T11:00:00", usuario:"Lucía Romero", accion:"Cambio de estado", estadoAnterior:"sin_acuerdo", estadoNuevo:"acuerdo_vigente", observaciones:"EDET se compromete a revisar el medidor en 15 días.", contacto:"Email", resultado:"Compromiso asumido", proximaAccion:"Verificar revisión", fechaProximaAccion:"2026-05-15"},
+        {id:uid("h"), fecha:"2026-08-30T10:00:00", usuario:"Lucía Romero", accion:"Cambio de estado", estadoAnterior:"acuerdo_vigente", estadoNuevo:"incumplido_denunciado", observaciones:"Pasados más de 3 meses, la empresa nunca envió al técnico. Consumidor sigue recibiendo facturas elevadas.", contacto:"Teléfono", resultado:"Incumplimiento confirmado", proximaAccion:"Evaluar giro a expediente formal", fechaProximaAccion:"2026-09-22"},
+      ],
+    },
+    {
+      id:"EXP-2026-0176", tipo:"expediente", numeroExpediente:"0176/2026", categoria:"Comercio",
+      fechaIngreso:"2026-05-02", fechaResolucion:null, responsable:"Carlos Ibáñez",
+      estadoOperativo:"en_gestion", resultadoAcuerdo:"sin_acuerdo",
+      denunciante:{nombre:"Patricia Alejandra Molina", dni:"27.331.884", domicilio:"Chacabuco 1523", localidad:"San Miguel de Tucumán", celular:"381-156-4432"},
+      empresas:[{nombre:"Cencosud (Easy Tucumán)", domicilio:"Av. Perón km 6", localidad:"San Miguel de Tucumán", celular:"381-450-2200"}],
+      descargo:"Se le vendió un producto con falla de fábrica y la empresa se niega a hacer la devolución del dinero pese a los reclamos.",
+      documentacion:["DNI","Facturas / comprobantes","Constancias de reclamos"], docOtra:"",
+      resolucionGestion:"", observaciones:"Notificación enviada, sin respuesta hasta el momento.", funcionario:"Carlos Ibáñez",
+      audiencias:[], casoVinculadoId:"EXT-2026-0090",
+      historial:[
+        {id:uid("h"), fecha:"2026-05-02T10:00:00", usuario:"Carlos Ibáñez", accion:"Ingreso de caso", estadoAnterior:null, estadoNuevo:"en_gestion", observaciones:"Caso originado a partir de Extra Expediente EXT-2026-0090 que no logró resolverse.", contacto:"", resultado:"", proximaAccion:"Notificar a la empresa", fechaProximaAccion:"2026-05-20"},
+      ],
+    },
+    {
+      id:"EXT-2026-0090", tipo:"extra_expediente", numeroExpediente:null, categoria:"Comercio",
+      fechaIngreso:"2026-03-18", fechaResolucion:"2026-04-30", responsable:"Carlos Ibáñez",
+      estadoOperativo:"cerrado", resultadoAcuerdo:"rechazado",
+      denunciante:{nombre:"Patricia Alejandra Molina", dni:"27.331.884", domicilio:"Chacabuco 1523", localidad:"San Miguel de Tucumán", celular:"381-156-4432"},
+      empresas:[{nombre:"Cencosud (Easy Tucumán)", domicilio:"Av. Perón km 6", localidad:"San Miguel de Tucumán", celular:"381-450-2200"}],
+      descargo:"Mismo reclamo por producto con falla de fábrica, intentado primero por vía informal.",
+      documentacion:["DNI","Facturas / comprobantes"], docOtra:"",
+      resolucionGestion:"La empresa se negó reiteradamente a resolver por esta vía. Se deriva a Expediente formal EXP-2026-0176.", observaciones:"Caso escalado a expediente formal por falta de resolución.", funcionario:"Carlos Ibáñez",
+      audiencias:[], casoVinculadoId:"EXP-2026-0176",
+      historial:[
+        {id:uid("h"), fecha:"2026-03-18T09:00:00", usuario:"Carlos Ibáñez", accion:"Ingreso de caso", estadoAnterior:null, estadoNuevo:"en_gestion", observaciones:"", contacto:"", resultado:"", proximaAccion:"Contactar al comercio", fechaProximaAccion:"2026-03-25"},
+        {id:uid("h"), fecha:"2026-04-10T15:00:00", usuario:"Carlos Ibáñez", accion:"Contacto realizado", estadoAnterior:"en_gestion", estadoNuevo:"en_gestion", observaciones:"El comercio se niega a resolver de forma directa.", contacto:"Teléfono", resultado:"Rechazo de la empresa", proximaAccion:"Evaluar escalar a expediente", fechaProximaAccion:"2026-04-30"},
+        {id:uid("h"), fecha:"2026-04-30T12:00:00", usuario:"Carlos Ibáñez", accion:"Escalado a Expediente", estadoAnterior:"en_gestion", estadoNuevo:"cerrado", observaciones:"Se crea expediente formal vinculado EXP-2026-0176 al no lograr acuerdo directo.", contacto:"", resultado:"Derivado", proximaAccion:"", fechaProximaAccion:""},
+      ],
+    },
+    {
+      id:"END-2026-0512", tipo:"endeudamiento", numeroExpediente:null, categoria:"Endeudamiento",
+      fechaIngreso:"2026-08-02", fechaResolucion:null, responsable:"Lucía Romero",
+      estadoOperativo:"en_gestion", resultadoAcuerdo:"sin_acuerdo",
+      denunciante:{nombre:"Ana María Corbalán", dni:"16.887.220", domicilio:"Pasaje Suecia 245", localidad:"Alderetes", celular:"381-155-0912"},
+      empresas:[{nombre:"Banco Galicia"},{nombre:"Tarjeta Naranja"}],
+      ingresos:{posee:true, ingresoMensual:520000, origen:["Jubilación / Pensión"], otroOrigen:"", personasDependientes:2},
+      entidadesDeuda:[
+        {nombre:"Banco Galicia", monto:1850000, fechaMora:"2025-11-10"},
+        {nombre:"Tarjeta Naranja", monto:640000, fechaMora:"2026-02-05"},
+      ],
+      reclamosPrevios:{realizo:true, fechaMedio:"Reclamo telefónico en enero 2026", numeroReclamo:"RN-88213"},
+      documentacion:["Resúmenes de cuenta","Comprobantes de pago"], docOtra:"",
+      descargo:"Es jubilada y con dos deudas que superan ampliamente su capacidad de pago actual; solicita intermediación para renegociar cuotas acordes a su ingreso.",
+      observaciones:"Alta prioridad por monto y atraso. Requiere contacto urgente con ambas entidades.", funcionario:"Lucía Romero",
+      historial:[
+        {id:uid("h"), fecha:"2026-08-02T09:20:00", usuario:"Lucía Romero", accion:"Ingreso de caso", estadoAnterior:null, estadoNuevo:"en_gestion", observaciones:"Consumidora se presenta con resúmenes de ambas entidades.", contacto:"", resultado:"", proximaAccion:"Contactar a Banco Galicia", fechaProximaAccion:"2026-09-24"},
+      ],
+    },
+    {
+      id:"END-2026-0498", tipo:"endeudamiento", numeroExpediente:null, categoria:"Endeudamiento",
+      fechaIngreso:"2026-07-11", fechaResolucion:null, responsable:"María Fernández",
+      estadoOperativo:"en_gestion", resultadoAcuerdo:"acuerdo_vigente",
+      denunciante:{nombre:"Walter Fabián Lescano", dni:"33.442.109", domicilio:"Av. Colón 340", localidad:"San Miguel de Tucumán", celular:"381-156-8871"},
+      empresas:[{nombre:"Banco Santander"}],
+      ingresos:{posee:true, ingresoMensual:780000, origen:["Relación de dependencia"], otroOrigen:"", personasDependientes:1},
+      entidadesDeuda:[{nombre:"Banco Santander", monto:920000, fechaMora:"2026-04-02"}],
+      reclamosPrevios:{realizo:false, fechaMedio:"", numeroReclamo:""},
+      documentacion:["Resúmenes de cuenta"], docOtra:"",
+      descargo:"Perdió parte de sus ingresos y no puede afrontar las cuotas del préstamo personal en las condiciones actuales.",
+      observaciones:"Se logró acuerdo de refinanciación en 12 cuotas.", funcionario:"María Fernández",
+      historial:[
+        {id:uid("h"), fecha:"2026-07-11T10:00:00", usuario:"María Fernández", accion:"Ingreso de caso", estadoAnterior:null, estadoNuevo:"en_gestion", observaciones:"", contacto:"", resultado:"", proximaAccion:"Contactar al banco", fechaProximaAccion:"2026-07-18"},
+        {id:uid("h"), fecha:"2026-08-05T11:30:00", usuario:"María Fernández", accion:"Cambio de estado", estadoAnterior:"sin_acuerdo", estadoNuevo:"acuerdo_vigente", observaciones:"Banco ofrece refinanciar en 12 cuotas fijas acordes al ingreso declarado.", contacto:"Email", resultado:"Acuerdo alcanzado", proximaAccion:"Seguimiento mensual de pagos", fechaProximaAccion:"2026-09-28"},
+      ],
+    },
+    {
+      id:"END-2026-0470", tipo:"endeudamiento", numeroExpediente:null, categoria:"Endeudamiento",
+      fechaIngreso:"2026-05-28", fechaResolucion:null, responsable:"Carlos Ibáñez",
+      estadoOperativo:"en_gestion", resultadoAcuerdo:"sin_acuerdo",
+      denunciante:{nombre:"Silvia Graciela Nieva", dni:"14.552.980", domicilio:"Balcarce 690", localidad:"Concepción", celular:"381-154-2290"},
+      empresas:[{nombre:"Banco Macro S.A."},{nombre:"Tarjeta Naranja"},{nombre:"Cetrogar (crédito personal)"}],
+      ingresos:{posee:true, ingresoMensual:410000, origen:["Trabajo informal"], otroOrigen:"", personasDependientes:3},
+      entidadesDeuda:[
+        {nombre:"Banco Macro S.A.", monto:2200000, fechaMora:"2025-08-15"},
+        {nombre:"Tarjeta Naranja", monto:980000, fechaMora:"2025-10-20"},
+        {nombre:"Cetrogar (crédito personal)", monto:410000, fechaMora:"2026-01-12"},
+      ],
+      reclamosPrevios:{realizo:true, fechaMedio:"Carta documento en marzo 2026", numeroReclamo:""},
+      documentacion:["Resúmenes de cuenta","Constancias de reclamos","Comunicaciones recibidas"], docOtra:"",
+      descargo:"Deuda acumulada en tres entidades tras la pérdida de su empleo formal; ingresos actuales muy por debajo de las cuotas exigidas.",
+      observaciones:"Caso de máxima prioridad: monto elevado y atrasos de larga data en las tres entidades.", funcionario:"Carlos Ibáñez",
+      historial:[
+        {id:uid("h"), fecha:"2026-05-28T09:00:00", usuario:"Carlos Ibáñez", accion:"Ingreso de caso", estadoAnterior:null, estadoNuevo:"en_gestion", observaciones:"", contacto:"", resultado:"", proximaAccion:"Contactar a las 3 entidades", fechaProximaAccion:"2026-06-05"},
+        {id:uid("h"), fecha:"2026-06-20T14:00:00", usuario:"Carlos Ibáñez", accion:"Contacto realizado", estadoAnterior:"en_gestion", estadoNuevo:"en_gestion", observaciones:"Se contacta a Banco Macro, solicitan documentación adicional de ingresos.", contacto:"Email", resultado:"En evaluación", proximaAccion:"Enviar documentación solicitada", fechaProximaAccion:"2026-09-19"},
+      ],
+    },
+    {
+      id:"END-2026-0455", tipo:"endeudamiento", numeroExpediente:null, categoria:"Endeudamiento",
+      fechaIngreso:"2026-09-01", fechaResolucion:null, responsable:"Lucía Romero",
+      estadoOperativo:"en_gestion", resultadoAcuerdo:"sin_acuerdo",
+      denunciante:{nombre:"Ricardo Omar Farías", dni:"24.109.665", domicilio:"Laprida 1120", localidad:"Yerba Buena", celular:"381-155-3410"},
+      empresas:[{nombre:"Banco Comafi"}],
+      ingresos:{posee:true, ingresoMensual:610000, origen:["Monotributo"], otroOrigen:"", personasDependientes:0},
+      entidadesDeuda:[{nombre:"Banco Comafi", monto:350000, fechaMora:"2026-08-01"}],
+      reclamosPrevios:{realizo:false, fechaMedio:"", numeroReclamo:""},
+      documentacion:["Resúmenes de cuenta"], docOtra:"",
+      descargo:"Atraso reciente por una baja temporal de facturación en su actividad monotributista.",
+      observaciones:"Caso reciente, prioridad baja por el momento.", funcionario:"Lucía Romero",
+      historial:[
+        {id:uid("h"), fecha:"2026-09-01T09:30:00", usuario:"Lucía Romero", accion:"Ingreso de caso", estadoAnterior:null, estadoNuevo:"en_gestion", observaciones:"", contacto:"", resultado:"", proximaAccion:"Contactar al banco", fechaProximaAccion:"2026-09-22"},
+      ],
+    },
+    {
+      id:"EXP-2026-0201", tipo:"expediente", numeroExpediente:"0201/2026", categoria:"Tarjeta de crédito",
+      fechaIngreso:"2026-06-15", fechaResolucion:null, responsable:"María Fernández",
+      estadoOperativo:"en_gestion", resultadoAcuerdo:"sin_acuerdo",
+      denunciante:{nombre:"Gustavo Adolfo Chávez", dni:"30.887.541", domicilio:"Alberdi 902", localidad:"San Miguel de Tucumán", celular:"381-153-7765"},
+      empresas:[{nombre:"Tarjeta Naranja", domicilio:"San Martín 550", localidad:"San Miguel de Tucumán", celular:"0810-333-2200"}],
+      descargo:"Le cobraron intereses y cargos por un resumen que nunca recibió, generando mora que impactó en su score crediticio.",
+      documentacion:["DNI","Resúmenes de cuenta"], docOtra:"",
+      resolucionGestion:"", observaciones:"", funcionario:"María Fernández", audiencias:[], casoVinculadoId:null,
+      historial:[
+        {id:uid("h"), fecha:"2026-06-15T09:00:00", usuario:"María Fernández", accion:"Ingreso de caso", estadoAnterior:null, estadoNuevo:"en_gestion", observaciones:"", contacto:"", resultado:"", proximaAccion:"Notificar a la empresa", fechaProximaAccion:"2026-07-01"},
+        {id:uid("h"), fecha:"2026-07-02T10:20:00", usuario:"María Fernández", accion:"Contacto realizado", estadoAnterior:"en_gestion", estadoNuevo:"en_gestion", observaciones:"Se remite oficio. Sin novedades desde entonces.", contacto:"Cédula / correo postal", resultado:"Sin respuesta", proximaAccion:"Reiterar intimación", fechaProximaAccion:"2026-06-20"},
+      ],
+    },
+    {
+      id:"EXT-2026-0410", tipo:"extra_expediente", numeroExpediente:null, categoria:"Otro",
+      fechaIngreso:"2026-09-10", fechaResolucion:null, responsable:"Carlos Ibáñez",
+      estadoOperativo:"en_gestion", resultadoAcuerdo:"sin_acuerdo",
+      denunciante:{nombre:"Verónica Soledad Toledo", dni:"32.665.874", domicilio:"Entre Ríos 745", localidad:"San Miguel de Tucumán", celular:"381-156-9901"},
+      empresas:[{nombre:"Inmobiliaria del Centro", domicilio:"Laprida 300", localidad:"San Miguel de Tucumán", celular:"381-422-3345"}],
+      descargo:"Reclama la devolución de un depósito de garantía de alquiler no reintegrado tras la finalización del contrato.",
+      documentacion:["Contrato / documentación contractual"], docOtra:"",
+      resolucionGestion:"", observaciones:"Caso recién ingresado.", funcionario:"Carlos Ibáñez", audiencias:[], casoVinculadoId:null,
+      historial:[
+        {id:uid("h"), fecha:"2026-09-10T09:00:00", usuario:"Carlos Ibáñez", accion:"Ingreso de caso", estadoAnterior:null, estadoNuevo:"en_gestion", observaciones:"", contacto:"", resultado:"", proximaAccion:"Contactar a la inmobiliaria", fechaProximaAccion:"2026-09-24"},
+      ],
+    },
+    {
+      id:"EXT-2026-0080", tipo:"extra_expediente", numeroExpediente:null, categoria:"Banco",
+      fechaIngreso:"2026-03-02", fechaResolucion:"2026-03-30", responsable:"Lucía Romero",
+      estadoOperativo:"cerrado", resultadoAcuerdo:"acuerdo_cumplido",
+      denunciante:{nombre:"Osvaldo Raúl Medina", dni:"19.887.001", domicilio:"Rivadavia 455", localidad:"San Miguel de Tucumán", celular:"381-154-1187"},
+      empresas:[{nombre:"Banco Galicia", domicilio:"San Martín 700", localidad:"San Miguel de Tucumán", celular:"0810-999-2265"}],
+      descargo:"Cobro duplicado de una cuota de préstamo personal.",
+      documentacion:["Resúmenes de cuenta","Comprobantes de pago"], docOtra:"",
+      resolucionGestion:"El banco reconoció el error y reintegró el monto duplicado.", observaciones:"", funcionario:"Lucía Romero", audiencias:[], casoVinculadoId:null,
+      historial:[
+        {id:uid("h"), fecha:"2026-03-02T09:00:00", usuario:"Lucía Romero", accion:"Ingreso de caso", estadoAnterior:null, estadoNuevo:"en_gestion", observaciones:"", contacto:"", resultado:"", proximaAccion:"", fechaProximaAccion:""},
+        {id:uid("h"), fecha:"2026-03-30T12:00:00", usuario:"Lucía Romero", accion:"Cambio de estado", estadoAnterior:"sin_acuerdo", estadoNuevo:"acuerdo_cumplido", observaciones:"Reintegro confirmado por el consumidor.", contacto:"Teléfono", resultado:"Resuelto", proximaAccion:"", fechaProximaAccion:""},
+      ],
+    },
+    {
+      id:"EXT-2026-0260", tipo:"extra_expediente", numeroExpediente:null, categoria:"Servicios",
+      fechaIngreso:"2026-06-28", fechaResolucion:null, responsable:"María Fernández",
+      estadoOperativo:"en_gestion", resultadoAcuerdo:"sin_acuerdo",
+      denunciante:{nombre:"Nadia Elizabeth Gómez", dni:"35.221.098", domicilio:"Mate de Luna 2200", localidad:"San Miguel de Tucumán", celular:"381-155-6634"},
+      empresas:[{nombre:"SAT - Sociedad Aguas del Tucumán", domicilio:"Crisóstomo Álvarez 500", localidad:"San Miguel de Tucumán", celular:"0800-444-7282"}],
+      descargo:"Facturación con montos muy superiores a los históricos sin explicación técnica.",
+      documentacion:["Facturas / comprobantes"], docOtra:"",
+      resolucionGestion:"", observaciones:"Sin movimientos recientes, requiere seguimiento.", funcionario:"María Fernández", audiencias:[], casoVinculadoId:null,
+      historial:[
+        {id:uid("h"), fecha:"2026-06-28T10:00:00", usuario:"María Fernández", accion:"Ingreso de caso", estadoAnterior:null, estadoNuevo:"en_gestion", observaciones:"", contacto:"", resultado:"", proximaAccion:"Contactar a SAT", fechaProximaAccion:"2026-07-05"},
+      ],
+    },
+  ];
+}
+
+/* ============================== PERSISTENCIA LOCAL (solo para esta demo) ============================== */
+function loadCasos(){
+  try{
+    const raw = localStorage.getItem("dci_demo_casos_v1");
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  return seedCasos();
+}
+function saveCasos(casos){
+  try{ localStorage.setItem("dci_demo_casos_v1", JSON.stringify(casos)); }catch(e){}
+}
+function loadWeights(){
+  try{
+    const raw = localStorage.getItem("dci_demo_weights_v1");
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  return {monto:55, atraso:45};
+}
+
+/* ============================== PRIORIDAD DE ENDEUDAMIENTO ============================== */
+function casoStats(caso){
+  const montoTotal = (caso.entidadesDeuda||[]).reduce((s,e)=>s+Number(e.monto||0),0);
+  const atrasos = (caso.entidadesDeuda||[]).map(e => daysBetween(e.fechaMora, TODAY)).filter(n=>!isNaN(n));
+  const atrasoMax = atrasos.length ? Math.max(...atrasos) : 0;
+  return {montoTotal, atrasoMax};
+}
+function computePriorities(casosEndeudamiento, weights){
+  const stats = casosEndeudamiento.map(casoStats);
+  const maxMonto = Math.max(1, ...stats.map(s=>s.montoTotal));
+  const maxAtraso = Math.max(1, ...stats.map(s=>s.atrasoMax));
+  return casosEndeudamiento.map((c,i)=>{
+    const s = stats[i];
+    const nMonto = Math.min(100, (s.montoTotal/maxMonto)*100);
+    const nAtraso = Math.min(100, (s.atrasoMax/maxAtraso)*100);
+    const score = (nMonto*weights.monto + nAtraso*weights.atraso) / 100;
+    let nivel = "baja";
+    if(score >= 66) nivel = "alta"; else if(score >= 35) nivel = "media";
+    return {...c, _montoTotal:s.montoTotal, _atrasoMax:s.atrasoMax, _score:score, _nivel:nivel, _nMonto:nMonto, _nAtraso:nAtraso};
+  }).sort((a,b)=>b._score-a._score);
+}
+
+/* ============================== UI ATOMS ============================== */
+function Badge({tone="b-neutral", children}){ return <span className={"badge "+tone}>{children}</span>; }
+
+function EstadoBadge({caso}){
+  const r = RESULTADO_LABEL[caso.resultadoAcuerdo] || RESULTADO_LABEL.sin_acuerdo;
+  if(caso.resultadoAcuerdo === "sin_acuerdo"){
+    const eo = ESTADO_LABEL[caso.estadoOperativo];
+    return <Badge tone={eo.cls}><span className="badge-dot" style={{background:eo.dot}}></span>{eo.label}</Badge>;
+  }
+  return <Badge tone={r.cls}>{r.label}</Badge>;
+}
+function TipoBadge({tipo}){
+  const map = {expediente:"b-primary", extra_expediente:"b-info", endeudamiento:"b-accent"};
+  return <Badge tone={map[tipo]}>{TIPOS[tipo]}</Badge>;
+}
+function NivelBadge({nivel}){
+  const map = {alta:{cls:"b-danger", label:"Prioridad alta"}, media:{cls:"b-warning", label:"Prioridad media"}, baja:{cls:"b-success", label:"Prioridad baja"}};
+  const m = map[nivel];
+  return <Badge tone={m.cls}>{m.label}</Badge>;
+}
+
+function KPI({label, value, sub, icon, tone}){
+  return (
+    <div className="card kpi">
+      <div className="kpi-top">
+        <div className="kpi-label">{label}</div>
+        <div className="kpi-icon" style={{background:`var(--${tone}-tint)`, color:`var(--${tone})`}}>{icon}</div>
+      </div>
+      <div className="kpi-value">{value}</div>
+      {sub && <div className="kpi-sub">{sub}</div>}
+    </div>
+  );
+}
+
+function Field({label, hint, children}){
+  return <div className="field"><label>{label}</label>{children}{hint && <div className="hint">{hint}</div>}</div>;
+}
+
+function Modal({title, onClose, children, foot, width}){
+  return (
+    <div className="modal-overlay" onMouseDown={(e)=>{ if(e.target===e.currentTarget) onClose(); }}>
+      <div className="modal" style={width?{maxWidth:width}:{}}>
+        <div className="modal-head">
+          <h3>{title}</h3>
+          <button className="icon-btn" onClick={onClose}><IcX/></button>
+        </div>
+        <div className="modal-body">{children}</div>
+        {foot && <div className="modal-foot">{foot}</div>}
+      </div>
+    </div>
+  );
+}
+
+function Toast({message, onDone}){
+  useEffect(()=>{ const t = setTimeout(onDone, 2600); return ()=>clearTimeout(t); },[]);
+  return <div className="toast"><IcCheck/> {message}</div>;
+}
+
+/* ---------- simple bar chart ---------- */
+function BarChart({data, valueFmt, color="var(--primary)", height=180}){
+  const max = Math.max(1, ...data.map(d=>d.value));
+  return (
+    <div style={{display:"flex", alignItems:"flex-end", gap:"14px", height:height, padding:"6px 4px 0"}}>
+      {data.map((d,i)=>(
+        <div key={i} style={{flex:1, display:"flex", flexDirection:"column", alignItems:"center", gap:"6px", height:"100%", justifyContent:"flex-end"}}>
+          <div className="mono" style={{fontSize:"11px", color:"var(--text-muted)", fontWeight:600}}>{valueFmt?valueFmt(d.value):d.value}</div>
+          <div title={d.label+": "+d.value} style={{width:"100%", maxWidth:"46px", height:Math.max(4,(d.value/max)*(height-46))+"px", background:d.color||color, borderRadius:"6px 6px 3px 3px"}}></div>
+          <div style={{fontSize:"11px", color:"var(--text-faint)", textAlign:"center", lineHeight:1.25, fontWeight:600}}>{d.label}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Donut({data, size=150}){
+  const total = data.reduce((s,d)=>s+d.value,0) || 1;
+  let acc = 0;
+  const r = 52, c = 2*Math.PI*r;
+  return (
+    <div style={{display:"flex", alignItems:"center", gap:"18px", flexWrap:"wrap"}}>
+      <svg width={size} height={size} viewBox="0 0 130 130">
+        <g transform="translate(65,65) rotate(-90)">
+          <circle r={r} fill="none" stroke="var(--surface-2)" strokeWidth="18"/>
+          {data.map((d,i)=>{
+            const frac = d.value/total;
+            const dash = frac*c;
+            const el = <circle key={i} r={r} fill="none" stroke={d.color} strokeWidth="18" strokeDasharray={dash+" "+(c-dash)} strokeDashoffset={-acc} strokeLinecap="butt"/>;
+            acc += dash;
+            return el;
+          })}
+        </g>
+        <text x="65" y="61" textAnchor="middle" fontSize="20" fontWeight="800" fill="var(--text)" fontFamily="Libre Franklin">{total}</text>
+        <text x="65" y="76" textAnchor="middle" fontSize="9.5" fill="var(--text-faint)" fontFamily="Public Sans">casos</text>
+      </svg>
+      <div style={{display:"flex", flexDirection:"column", gap:"7px"}}>
+        {data.map((d,i)=>(
+          <div key={i} style={{display:"flex", alignItems:"center", gap:"7px", fontSize:"12.5px"}}>
+            <span style={{width:"9px", height:"9px", borderRadius:"3px", background:d.color, flex:"none"}}></span>
+            <span style={{color:"var(--text-muted)", fontWeight:600}}>{d.label}</span>
+            <span className="mono" style={{fontWeight:700, marginLeft:"4px"}}>{d.value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function LineChart({data, height=170, color="var(--primary)"}){
+  const w = 560;
+  const max = Math.max(1, ...data.map(d=>d.value));
+  const min = 0;
+  const stepX = w/(data.length-1||1);
+  const pts = data.map((d,i)=>{
+    const x = i*stepX;
+    const y = height - ((d.value-min)/(max-min||1))*(height-24) - 6;
+    return [x,y];
+  });
+  const path = pts.map((p,i)=> (i===0?"M":"L")+p[0].toFixed(1)+","+p[1].toFixed(1)).join(" ");
+  const area = path + ` L ${pts[pts.length-1][0]},${height} L 0,${height} Z`;
+  return (
+    <div style={{overflowX:"auto"}}>
+      <svg width="100%" viewBox={`0 0 ${w} ${height+26}`} style={{minWidth:"420px"}}>
+        <defs>
+          <linearGradient id="lg1" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} stopOpacity="0.25"/>
+            <stop offset="100%" stopColor={color} stopOpacity="0"/>
+          </linearGradient>
+        </defs>
+        {[0.25,0.5,0.75].map((f,i)=>(<line key={i} x1="0" x2={w} y1={height*f} y2={height*f} stroke="var(--border)" strokeWidth="1"/>))}
+        <path d={area} fill="url(#lg1)" stroke="none"/>
+        <path d={path} fill="none" stroke={color} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round"/>
+        {pts.map((p,i)=>(<circle key={i} cx={p[0]} cy={p[1]} r="3.2" fill={color}/>))}
+        {data.map((d,i)=>(<text key={i} x={pts[i][0]} y={height+18} textAnchor="middle" fontSize="10.5" fill="var(--text-faint)" fontFamily="Public Sans" fontWeight="600">{d.label}</text>))}
+      </svg>
+    </div>
+  );
+}
+
+/* ============================== APP SHELL ============================== */
+function useTheme(){
+  const [theme,setTheme] = useState(()=>{ try{ return localStorage.getItem("dci_demo_theme")||"system"; }catch(e){ return "system"; } });
+  useEffect(()=>{
+    if(theme==="system") document.documentElement.removeAttribute("data-theme");
+    else document.documentElement.setAttribute("data-theme", theme);
+    try{ localStorage.setItem("dci_demo_theme", theme); }catch(e){}
+  },[theme]);
+  return [theme,setTheme];
+}
+
+function initials(name){ return name.split(" ").filter(Boolean).slice(0,2).map(w=>w[0]).join("").toUpperCase(); }
+
+function App(){
+  const [casos, setCasos] = useState(loadCasos);
+  const [weights, setWeights] = useState(loadWeights);
+  const [route, setRoute] = useState({view:"dashboard"});
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [theme, setTheme] = useTheme();
+
+  useEffect(()=>{ saveCasos(casos); },[casos]);
+  useEffect(()=>{ try{ localStorage.setItem("dci_demo_weights_v1", JSON.stringify(weights)); }catch(e){} },[weights]);
+
+  function go(view, params){ setRoute({view, ...params}); setMenuOpen(false); window.scrollTo(0,0); }
+  function notify(msg){ setToast(msg); }
+
+  function addCaso(caso){
+    setCasos(prev => [caso, ...prev]);
+  }
+  function updateCaso(id, patch){
+    setCasos(prev => prev.map(c => c.id===id ? {...c, ...patch} : c));
+  }
+  function addHistorial(id, entry){
+    setCasos(prev => prev.map(c => c.id===id ? {...c, historial:[...c.historial, entry]} : c));
+  }
+
+  const endeudCasos = useMemo(()=>casos.filter(c=>c.tipo==="endeudamiento"),[casos]);
+  const prioritized = useMemo(()=>computePriorities(endeudCasos, weights),[endeudCasos, weights]);
+
+  const casoActual = route.id ? casos.find(c=>c.id===route.id) : null;
+
+  const navItems = [
+    {key:"dashboard", label:"Inicio", icon:<IcHome/>},
+    {key:"list", label:"Bandeja de casos", icon:<IcFolder/>},
+    {key:"endeudamiento", label:"Endeudamiento", icon:<IcCoin/>, badge: endeudCasos.filter(c=>c.estadoOperativo==="en_gestion").length},
+    {key:"stats", label:"Estadísticas", icon:<IcChart/>},
+  ];
+
+  return (
+    <div className="app">
+      <div className={"sidebar" + (menuOpen ? " open":"")}>
+        <div className="brand">
+          <img src="data:image/png;base64,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" alt="Logo DCI"/>
+          <div className="brand-text">
+            <b>DCI Tucumán</b>
+            <span>Defensa del Consumidor</span>
+          </div>
+        </div>
+        <div className="nav">
+          <div className="nav-label">Gestión</div>
+          {navItems.map(it=>(
+            <button key={it.key} className={"nav-item"+(route.view===it.key?" active":"")} onClick={()=>go(it.key)}>
+              <span className="ico">{it.icon}</span>{it.label}
+              {!!it.badge && <span className="nav-badge">{it.badge}</span>}
+            </button>
+          ))}
+          <div className="nav-label">Acciones</div>
+          <button className="nav-item" onClick={()=>go("new")}>
+            <span className="ico"><IcPlus/></span>Nuevo caso
+          </button>
+          <button className="nav-item" onClick={()=>go("settings")}>
+            <span className="ico"><IcSettings/></span>Configuración
+          </button>
+        </div>
+        <div className="sidebar-foot">
+          <span className="demo-pill">● Versión demo</span>
+          <div className="role-row">
+            <div className="role-avatar">AD</div>
+            <div>
+              <div className="role-name">Administrador</div>
+              <div className="role-tag">Rol único (por ahora)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="main">
+        <div className="topbar">
+          <button className="icon-btn menu-toggle" onClick={()=>setMenuOpen(v=>!v)}><IcMenu/></button>
+          <div>
+            <h1>{
+              {dashboard:"Inicio", list:"Bandeja de casos", endeudamiento:"Casos de endeudamiento",
+               stats:"Estadísticas y reportes", new:"Nuevo caso", detail:casoActual?casoActual.id:"Caso", settings:"Configuración"}[route.view]
+            }</h1>
+            <div className="subtitle">{
+              {dashboard:"Qué tenés que atender hoy", list:"Expedientes, Extra Expedientes y Endeudamiento", endeudamiento:"Ordenados por prioridad de atención",
+               stats:"Panorama general de la oficina", new:"Registrar un nuevo caso en el sistema", detail: casoActual ? (TIPOS[casoActual.tipo]+" · "+casoActual.categoria) : "", settings:"Prioridad, roles y datos de la demo"}[route.view]
+            }</div>
+          </div>
+          {route.view!=="new" && (
+            <div className="search">
+              <IcSearch/>
+              <input placeholder="Buscar por expediente, DNI o empresa…" onKeyDown={(e)=>{ if(e.key==="Enter" && e.target.value.trim()){ go("list", {q:e.target.value.trim()}); } }} />
+            </div>
+          )}
+          {route.view!=="new" && <button className="btn btn-accent" onClick={()=>go("new")}><IcPlus/>Nuevo caso</button>}
+        </div>
+
+        <div className="content">
+          {route.view==="dashboard" && <Dashboard casos={casos} prioritized={prioritized} go={go}/>}
+          {route.view==="list" && <ListaCasos casos={casos} go={go} initialQuery={route.q}/>}
+          {route.view==="endeudamiento" && <Endeudamiento prioritized={prioritized} weights={weights} setWeights={setWeights} go={go}/>}
+          {route.view==="stats" && <Estadisticas casos={casos}/>}
+          {route.view==="new" && <NuevoCaso casos={casos} onCreate={(c)=>{ addCaso(c); notify("Caso "+c.id+" creado correctamente"); go("detail",{id:c.id}); }} onCancel={()=>go("list")}/>}
+          {route.view==="detail" && casoActual && <FichaCaso caso={casoActual} casos={casos} onUpdate={updateCaso} onAddHistorial={addHistorial} onCreateLinked={(c)=>{ addCaso(c); notify("Caso vinculado "+c.id+" creado"); }} go={go} notify={notify}/>}
+          {route.view==="settings" && <Configuracion weights={weights} setWeights={setWeights} theme={theme} setTheme={setTheme}/>}
+        </div>
+      </div>
+
+      {toast && <Toast message={toast} onDone={()=>setToast(null)}/>}
+    </div>
+  );
+}
+
+/* ============================== DASHBOARD ============================== */
+function Dashboard({casos, prioritized, go}){
+  const enGestion = casos.filter(c=>c.estadoOperativo==="en_gestion");
+  const acuerdoExitoso = casos.filter(c=>c.resultadoAcuerdo==="acuerdo_vigente");
+  const finalizados = casos.filter(c=>c.resultadoAcuerdo==="acuerdo_cumplido");
+  const incumplidos = casos.filter(c=>c.resultadoAcuerdo==="incumplido_denunciante"||c.resultadoAcuerdo==="incumplido_denunciado");
+
+  const olvidados = enGestion.map(c=>{
+    const ultimaFecha = c.historial.length ? c.historial[c.historial.length-1].fecha.slice(0,10) : c.fechaIngreso;
+    return {...c, diasSinMovimiento: daysBetween(ultimaFecha, TODAY)};
+  }).filter(c=>c.diasSinMovimiento >= 20).sort((a,b)=>b.diasSinMovimiento-a.diasSinMovimiento);
+
+  const proximas = [];
+  casos.forEach(c=>{
+    (c.historial||[]).forEach(h=>{
+      if(h.fechaProximaAccion){
+        const dias = daysBetween(TODAY, h.fechaProximaAccion);
+        if(dias >= -3 && dias <= 10){
+          proximas.push({casoId:c.id, caso:c, proximaAccion:h.proximaAccion, fecha:h.fechaProximaAccion, dias});
+        }
+      }
+    });
+  });
+  const proximasUnicas = Object.values(proximas.reduce((acc,p)=>{ acc[p.casoId] = p; return acc; },{})).sort((a,b)=>a.dias-b.dias);
+
+  const actividad = [];
+  casos.forEach(c=>{ (c.historial||[]).forEach(h=> actividad.push({...h, casoId:c.id, tipo:c.tipo})); });
+  actividad.sort((a,b)=> new Date(b.fecha) - new Date(a.fecha));
+  const actividadReciente = actividad.slice(0,6);
+
+  const topEndeudamiento = prioritized.filter(c=>c.estadoOperativo==="en_gestion").slice(0,5);
+
+  return (
+    <div style={{display:"flex", flexDirection:"column", gap:"20px"}}>
+      <div className="grid cols-4">
+        <KPI label="Casos en gestión" value={enGestion.length} sub={casos.length+" casos totales"} tone="info" icon={<IcFolder/>}/>
+        <KPI label="Con acuerdo vigente" value={acuerdoExitoso.length} sub="En seguimiento de cumplimiento" tone="success" icon={<IcCheck/>}/>
+        <KPI label="Incumplimientos activos" value={incumplidos.length} sub="Requieren nueva gestión" tone="danger" icon={<IcAlert/>}/>
+        <KPI label="Finalizados (cumplidos)" value={finalizados.length} sub={Math.round(finalizados.length/Math.max(1,casos.length)*100)+"% del total"} tone="primary" icon={<IcFlag/>}/>
+      </div>
+
+      <div className="grid cols-2">
+        <div className="card card-pad">
+          <div className="section-head">
+            <div className="section-title"><IcAlert style={{color:"var(--danger)"}}/> Casos sin movimiento</div>
+            <span className="small muted">{olvidados.length} caso(s)</span>
+          </div>
+          {olvidados.length===0 ? (
+            <div className="empty-state"><IcCheck/><div>No hay casos "olvidados" por ahora.</div></div>
+          ) : olvidados.slice(0,5).map(c=>(
+            <div className="alert-row" key={c.id} style={{cursor:"pointer"}} onClick={()=>go("detail",{id:c.id})}>
+              <div className="alert-ic" style={{background:"var(--danger-tint)", color:"var(--danger)"}}><IcClock/></div>
+              <div style={{flex:1}}>
+                <div className="alert-title">{c.denunciante.nombre} <span className="mono muted" style={{fontWeight:500}}>· {c.id}</span></div>
+                <div className="alert-sub">Sin movimientos hace {c.diasSinMovimiento} días · {c.responsable}</div>
+              </div>
+              <IcChevR style={{width:14,height:14,color:"var(--text-faint)", marginTop:6}}/>
+            </div>
+          ))}
+        </div>
+
+        <div className="card card-pad">
+          <div className="section-head">
+            <div className="section-title"><IcClock style={{color:"var(--warning)"}}/> Próximas acciones</div>
+            <span className="small muted">{proximasUnicas.length} caso(s)</span>
+          </div>
+          {proximasUnicas.length===0 ? (
+            <div className="empty-state"><IcCheck/><div>No hay acciones próximas cargadas.</div></div>
+          ) : proximasUnicas.slice(0,5).map(p=>(
+            <div className="alert-row" key={p.casoId} style={{cursor:"pointer"}} onClick={()=>go("detail",{id:p.casoId})}>
+              <div className="alert-ic" style={{background: p.dias<0 ? "var(--danger-tint)":"var(--warning-tint)", color: p.dias<0 ? "var(--danger)":"var(--warning)"}}><IcFlag/></div>
+              <div style={{flex:1}}>
+                <div className="alert-title">{p.proximaAccion || "Seguimiento"} <span className="mono muted" style={{fontWeight:500}}>· {p.casoId}</span></div>
+                <div className="alert-sub">{p.caso.denunciante.nombre} · {p.dias<0 ? `Vencida hace ${-p.dias} días` : p.dias===0 ? "Vence hoy" : `Vence en ${p.dias} días`} ({fmtDate(p.fecha)})</div>
+              </div>
+              <IcChevR style={{width:14,height:14,color:"var(--text-faint)", marginTop:6}}/>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid cols-2">
+        <div className="card card-pad">
+          <div className="section-head">
+            <div className="section-title"><IcCoin style={{color:"var(--accent)"}}/> Endeudamiento prioritario</div>
+            <button className="link-btn" onClick={()=>go("endeudamiento")}>Ver todos</button>
+          </div>
+          {topEndeudamiento.map(c=>(
+            <div key={c.id} style={{padding:"10px 0", borderBottom:"1px solid var(--border)"}}>
+              <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", gap:"10px"}}>
+                <div style={{cursor:"pointer"}} onClick={()=>go("detail",{id:c.id})}>
+                  <div style={{fontWeight:700, fontSize:"13px"}}>{c.denunciante.nombre}</div>
+                  <div className="small muted">{fmtMoney(c._montoTotal)} · {c._atrasoMax} días de atraso</div>
+                </div>
+                <NivelBadge nivel={c._nivel}/>
+              </div>
+              <div className="prio-bar-track" style={{marginTop:"7px"}}>
+                <div className="prio-bar-fill" style={{width:c._score+"%", background: c._nivel==="alta"?"var(--danger)":c._nivel==="media"?"var(--warning)":"var(--success)"}}></div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="card card-pad">
+          <div className="section-head">
+            <div className="section-title"><IcHistory style={{color:"var(--primary)"}}/> Actividad reciente</div>
+          </div>
+          <div className="timeline">
+            {actividadReciente.map(h=>(
+              <div className="tl-item" key={h.id}>
+                <div className="tl-dot"></div>
+                <div className="tl-head"><span className="tl-title">{h.accion}</span><span className="tl-date">{fmtDateTime(h.fecha)}</span></div>
+                <div className="tl-body">{h.casoId} · {h.usuario}{h.observaciones ? " — "+h.observaciones : ""}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============================== LISTA DE CASOS ============================== */
+function ListaCasos({casos, go, initialQuery}){
+  const [q, setQ] = useState(initialQuery || "");
+  const [fTipo, setFTipo] = useState("");
+  const [fCategoria, setFCategoria] = useState("");
+  const [fEstado, setFEstado] = useState("");
+  const [fResponsable, setFResponsable] = useState("");
+  const [sortKey, setSortKey] = useState("fechaIngreso");
+  const [sortDir, setSortDir] = useState("desc");
+
+  const filtered = useMemo(()=>{
+    let r = casos.filter(c=>{
+      if(fTipo && c.tipo!==fTipo) return false;
+      if(fCategoria && c.categoria!==fCategoria) return false;
+      if(fResponsable && c.responsable!==fResponsable) return false;
+      if(fEstado){
+        if(fEstado==="en_gestion" && c.estadoOperativo!=="en_gestion") return false;
+        if(fEstado!=="en_gestion" && c.resultadoAcuerdo!==fEstado) return false;
+      }
+      if(q){
+        const hay = (c.id+" "+(c.numeroExpediente||"")+" "+c.denunciante.nombre+" "+c.denunciante.dni+" "+(c.empresas||[]).map(e=>e.nombre).join(" ")).toLowerCase();
+        if(!hay.includes(q.toLowerCase())) return false;
+      }
+      return true;
+    });
+    r.sort((a,b)=>{
+      let av, bv;
+      if(sortKey==="fechaIngreso"){ av=a.fechaIngreso; bv=b.fechaIngreso; }
+      else if(sortKey==="denunciante"){ av=a.denunciante.nombre; bv=b.denunciante.nombre; }
+      else if(sortKey==="tipo"){ av=a.tipo; bv=b.tipo; }
+      else { av=a[sortKey]; bv=b[sortKey]; }
+      if(av<bv) return sortDir==="asc"?-1:1;
+      if(av>bv) return sortDir==="asc"?1:-1;
+      return 0;
+    });
+    return r;
+  },[casos,q,fTipo,fCategoria,fEstado,fResponsable,sortKey,sortDir]);
+
+  function toggleSort(key){
+    if(sortKey===key) setSortDir(d=>d==="asc"?"desc":"asc");
+    else { setSortKey(key); setSortDir("desc"); }
+  }
+
+  const activeFilters = [
+    fTipo && {k:"tipo", label:TIPOS[fTipo], clear:()=>setFTipo("")},
+    fCategoria && {k:"cat", label:fCategoria, clear:()=>setFCategoria("")},
+    fEstado && {k:"est", label: fEstado==="en_gestion"?"En gestión":(RESULTADO_LABEL[fEstado]||{}).label, clear:()=>setFEstado("")},
+    fResponsable && {k:"resp", label:fResponsable, clear:()=>setFResponsable("")},
+  ].filter(Boolean);
+
+  return (
+    <div style={{display:"flex", flexDirection:"column", gap:"16px"}}>
+      <div className="card card-pad">
+        <div className="filters">
+          <select value={fTipo} onChange={e=>setFTipo(e.target.value)}>
+            <option value="">Todos los tipos</option>
+            {Object.entries(TIPOS).map(([k,v])=><option key={k} value={k}>{v}</option>)}
+          </select>
+          <select value={fCategoria} onChange={e=>setFCategoria(e.target.value)}>
+            <option value="">Todas las categorías</option>
+            {CATEGORIAS.concat(["Endeudamiento"]).map(c=><option key={c} value={c}>{c}</option>)}
+          </select>
+          <select value={fEstado} onChange={e=>setFEstado(e.target.value)}>
+            <option value="">Todos los estados</option>
+            <option value="en_gestion">En gestión</option>
+            <option value="acuerdo_vigente">Acuerdo exitoso (vigente)</option>
+            <option value="acuerdo_cumplido">Finalizado — cumplido</option>
+            <option value="incumplido_denunciante">Incumplimiento del denunciante</option>
+            <option value="incumplido_denunciado">Incumplimiento del denunciado</option>
+            <option value="rechazado">No corresponde a la DCI</option>
+          </select>
+          <select value={fResponsable} onChange={e=>setFResponsable(e.target.value)}>
+            <option value="">Todos los responsables</option>
+            {RESPONSABLES.map(r=><option key={r} value={r}>{r}</option>)}
+          </select>
+          <input placeholder="Buscar expediente, DNI, empresa…" value={q} onChange={e=>setQ(e.target.value)} style={{minWidth:"220px", flex:1}}/>
+          {(fTipo||fCategoria||fEstado||fResponsable||q) && <button className="btn btn-ghost btn-sm" onClick={()=>{setFTipo("");setFCategoria("");setFEstado("");setFResponsable("");setQ("");}}>Limpiar</button>}
+        </div>
+        {activeFilters.length>0 && (
+          <div style={{display:"flex", gap:"7px", marginTop:"11px", flexWrap:"wrap"}}>
+            {activeFilters.map(f=>(
+              <span className="chip" key={f.k}>{f.label}<button onClick={f.clear}><IcX/></button></span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th className="sortable" onClick={()=>toggleSort("id")}>Caso {sortKey==="id" && <span className="arrow">{sortDir==="asc"?"↑":"↓"}</span>}</th>
+              <th className="sortable" onClick={()=>toggleSort("tipo")}>Tipo {sortKey==="tipo" && <span className="arrow">{sortDir==="asc"?"↑":"↓"}</span>}</th>
+              <th className="sortable" onClick={()=>toggleSort("denunciante")}>Denunciante {sortKey==="denunciante" && <span className="arrow">{sortDir==="asc"?"↑":"↓"}</span>}</th>
+              <th>Empresa/entidad</th>
+              <th>Categoría</th>
+              <th className="sortable" onClick={()=>toggleSort("fechaIngreso")}>Ingreso {sortKey==="fechaIngreso" && <span className="arrow">{sortDir==="asc"?"↑":"↓"}</span>}</th>
+              <th>Responsable</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map(c=>(
+              <tr key={c.id} onClick={()=>go("detail",{id:c.id})}>
+                <td>
+                  <div className="cell-strong mono">{c.numeroExpediente || c.id}</div>
+                  {c.numeroExpediente && <div className="cell-muted mono">{c.id}</div>}
+                </td>
+                <td><TipoBadge tipo={c.tipo}/></td>
+                <td>
+                  <div className="cell-strong">{c.denunciante.nombre}</div>
+                  <div className="cell-muted mono">DNI {c.denunciante.dni}</div>
+                </td>
+                <td>{(c.empresas||[]).map(e=>e.nombre).join(", ")}</td>
+                <td>{c.categoria}</td>
+                <td className="mono">{fmtDate(c.fechaIngreso)}</td>
+                <td>{c.responsable}</td>
+                <td><EstadoBadge caso={c}/></td>
+              </tr>
+            ))}
+            {filtered.length===0 && (
+              <tr><td colSpan="8"><div className="empty-state"><IcSearch/><div>No se encontraron casos con estos filtros.</div></div></td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      <div className="small muted">{filtered.length} de {casos.length} casos</div>
+    </div>
+  );
+}
+
+/* ============================== ENDEUDAMIENTO ============================== */
+function Endeudamiento({prioritized, weights, setWeights, go}){
+  const [showInfo, setShowInfo] = useState(false);
+  const activos = prioritized.filter(c=>c.estadoOperativo==="en_gestion");
+  const montoTotalGestionado = prioritized.reduce((s,c)=>s+c._montoTotal,0);
+
+  return (
+    <div style={{display:"flex", flexDirection:"column", gap:"18px"}}>
+      <div className="grid cols-3">
+        <KPI label="Casos activos" value={activos.length} sub={prioritized.length+" en total"} tone="accent" icon={<IcCoin/>}/>
+        <KPI label="Prioridad alta" value={activos.filter(c=>c._nivel==="alta").length} sub="Requieren atención inmediata" tone="danger" icon={<IcAlert/>}/>
+        <KPI label="Monto total gestionado" value={fmtMoney(montoTotalGestionado)} sub="Suma de deudas registradas" tone="primary" icon={<IcChart/>}/>
+      </div>
+
+      <div className="card card-pad">
+        <div className="section-head">
+          <div className="section-title">¿Cómo se calcula la prioridad?</div>
+          <button className="link-btn" onClick={()=>setShowInfo(v=>!v)}>{showInfo ? "Ocultar" : "Ajustar ponderación"}</button>
+        </div>
+        <p className="small muted" style={{marginTop:"-6px"}}>La prioridad combina el <b>monto total adeudado</b> y el <b>mayor tiempo de atraso</b> entre las entidades del caso, normalizados entre 0 y 100. La oficina puede ajustar el peso de cada factor — este es un punto que conviene validar con ustedes antes de fijarlo en la versión final.</p>
+        {showInfo && (
+          <div style={{display:"flex", flexDirection:"column", gap:"16px", marginTop:"6px", maxWidth:"520px"}}>
+            <div>
+              <div style={{display:"flex", justifyContent:"space-between", fontSize:"12.5px", fontWeight:700}}>
+                <span>Peso del monto de deuda</span><span className="mono">{weights.monto}%</span>
+              </div>
+              <input type="range" min="0" max="100" value={weights.monto} style={{width:"100%", accentColor:"var(--primary)"}}
+                onChange={e=>{ const m=Number(e.target.value); setWeights({monto:m, atraso:100-m}); }}/>
+            </div>
+            <div>
+              <div style={{display:"flex", justifyContent:"space-between", fontSize:"12.5px", fontWeight:700}}>
+                <span>Peso del tiempo de atraso</span><span className="mono">{weights.atraso}%</span>
+              </div>
+              <input type="range" min="0" max="100" value={weights.atraso} style={{width:"100%", accentColor:"var(--accent)"}}
+                onChange={e=>{ const a=Number(e.target.value); setWeights({monto:100-a, atraso:a}); }}/>
+            </div>
+            <button className="btn btn-ghost btn-sm" style={{alignSelf:"flex-start"}} onClick={()=>setWeights({monto:55,atraso:45})}>Restaurar valores por defecto</button>
+          </div>
+        )}
+      </div>
+
+      <div className="card card-pad">
+        <div className="section-title" style={{marginBottom:"14px"}}>Casos ordenados por prioridad</div>
+        <div style={{display:"flex", flexDirection:"column", gap:"4px"}}>
+          <div style={{display:"grid", gridTemplateColumns:"28px 2fr 1.3fr 1fr 1fr 1.4fr", gap:"10px", padding:"0 6px 8px", fontSize:"11px", fontWeight:700, color:"var(--text-faint)", textTransform:"uppercase", letterSpacing:"0.04em", borderBottom:"1px solid var(--border)"}}>
+            <span>#</span><span>Consumidor</span><span>Entidades</span><span>Deuda total</span><span>Atraso máx.</span><span>Prioridad</span>
+          </div>
+          {prioritized.map((c,i)=>(
+            <div key={c.id} onClick={()=>go("detail",{id:c.id})} style={{display:"grid", gridTemplateColumns:"28px 2fr 1.3fr 1fr 1fr 1.4fr", gap:"10px", alignItems:"center", padding:"11px 6px", borderBottom:"1px solid var(--border)", cursor:"pointer"}}
+              onMouseEnter={e=>e.currentTarget.style.background="var(--surface-hover)"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+              <span className="mono muted" style={{fontWeight:700}}>{i+1}</span>
+              <div>
+                <div style={{fontWeight:700, fontSize:"13px"}}>{c.denunciante.nombre}</div>
+                <div className="small muted mono">DNI {c.denunciante.dni} · {c.id}</div>
+              </div>
+              <div className="small muted">{(c.empresas||[]).map(e=>e.nombre).join(", ")}</div>
+              <div className="mono" style={{fontWeight:700}}>{fmtMoney(c._montoTotal)}</div>
+              <div className="mono">{c._atrasoMax} días</div>
+              <div>
+                <div style={{display:"flex", justifyContent:"space-between", marginBottom:"4px"}}>
+                  <NivelBadge nivel={c._nivel}/>
+                  <span className="mono small" style={{fontWeight:700}}>{c._score.toFixed(0)}</span>
+                </div>
+                <div className="prio-bar-track">
+                  <div className="prio-bar-fill" style={{width:c._score+"%", background: c._nivel==="alta"?"var(--danger)":c._nivel==="media"?"var(--warning)":"var(--success)"}}></div>
+                </div>
+              </div>
+            </div>
+          ))}
+          {prioritized.length===0 && <div className="empty-state"><IcCoin/><div>Todavía no hay casos de endeudamiento cargados.</div></div>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============================== ESTADÍSTICAS ============================== */
+function Estadisticas({casos}){
+  const total = casos.length;
+  const expedientes = casos.filter(c=>c.tipo==="expediente").length;
+  const extra = casos.filter(c=>c.tipo==="extra_expediente").length;
+  const endeud = casos.filter(c=>c.tipo==="endeudamiento").length;
+  const finalizados = casos.filter(c=>c.resultadoAcuerdo==="acuerdo_cumplido");
+  const incumplidos = casos.filter(c=>c.resultadoAcuerdo==="incumplido_denunciante"||c.resultadoAcuerdo==="incumplido_denunciado").length;
+  const pctResueltos = Math.round((finalizados.length/Math.max(1,total))*100);
+
+  const tiempoProm = (()=>{
+    const dias = finalizados.map(c=>daysBetween(c.fechaIngreso, c.fechaResolucion)).filter(n=>!isNaN(n));
+    if(!dias.length) return 0;
+    return Math.round(dias.reduce((a,b)=>a+b,0)/dias.length);
+  })();
+
+  const montoDeuda = casos.filter(c=>c.tipo==="endeudamiento").reduce((s,c)=>s+(c.entidadesDeuda||[]).reduce((s2,e)=>s2+Number(e.monto||0),0),0);
+
+  const porCategoria = {};
+  casos.forEach(c=>{ porCategoria[c.categoria] = (porCategoria[c.categoria]||0)+1; });
+  const catData = Object.entries(porCategoria).sort((a,b)=>b[1]-a[1]).map(([label,value])=>({label,value}));
+
+  const porEmpresa = {};
+  casos.forEach(c=> (c.empresas||[]).forEach(e=>{ porEmpresa[e.nombre]=(porEmpresa[e.nombre]||0)+1; }) );
+  const empData = Object.entries(porEmpresa).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([label,value])=>({label: label.length>16?label.slice(0,15)+"…":label, value}));
+
+  const meses = ["2026-04","2026-05","2026-06","2026-07","2026-08","2026-09"];
+  const mesLabel = {"2026-04":"Abr","2026-05":"May","2026-06":"Jun","2026-07":"Jul","2026-08":"Ago","2026-09":"Sep"};
+  const evolData = meses.map(m=>({label:mesLabel[m], value: casos.filter(c=>c.fechaIngreso.startsWith(m)).length}));
+
+  return (
+    <div style={{display:"flex", flexDirection:"column", gap:"18px"}}>
+      <div className="grid cols-4">
+        <KPI label="Casos totales" value={total} tone="primary" icon={<IcFolder/>}/>
+        <KPI label="% resueltos" value={pctResueltos+"%"} sub={finalizados.length+" finalizados con acuerdo cumplido"} tone="success" icon={<IcCheck/>}/>
+        <KPI label="Tiempo prom. de resolución" value={tiempoProm+" días"} sub="Desde ingreso hasta cierre" tone="info" icon={<IcClock/>}/>
+        <KPI label="Monto total de deuda gestionada" value={fmtMoney(montoDeuda)} sub="Casos de endeudamiento" tone="accent" icon={<IcCoin/>}/>
+      </div>
+
+      <div className="grid cols-2">
+        <div className="card card-pad">
+          <div className="section-title" style={{marginBottom:"14px"}}>Casos por tipo</div>
+          <Donut data={[
+            {label:"Expedientes", value:expedientes, color:"var(--primary)"},
+            {label:"Extra Expedientes", value:extra, color:"var(--info)"},
+            {label:"Endeudamiento", value:endeud, color:"var(--accent)"},
+          ]}/>
+        </div>
+        <div className="card card-pad">
+          <div className="section-title" style={{marginBottom:"6px"}}>Evolución de ingresos por mes</div>
+          <LineChart data={evolData} color="var(--primary)"/>
+        </div>
+      </div>
+
+      <div className="grid cols-2">
+        <div className="card card-pad">
+          <div className="section-title" style={{marginBottom:"6px"}}>Casos por categoría de reclamo</div>
+          <BarChart data={catData} color="var(--primary-2)"/>
+        </div>
+        <div className="card card-pad">
+          <div className="section-title" style={{marginBottom:"6px"}}>Empresas más denunciadas</div>
+          <BarChart data={empData} color="var(--accent)"/>
+        </div>
+      </div>
+
+      <div className="card card-pad">
+        <div className="section-title" style={{marginBottom:"12px"}}>Resultados de gestión</div>
+        <div className="grid cols-4">
+          <div>
+            <div className="small muted">En gestión</div>
+            <div style={{fontSize:"20px", fontFamily:"var(--font-display)", fontWeight:800}}>{casos.filter(c=>c.estadoOperativo==="en_gestion").length}</div>
+          </div>
+          <div>
+            <div className="small muted">Con acuerdo vigente</div>
+            <div style={{fontSize:"20px", fontFamily:"var(--font-display)", fontWeight:800, color:"var(--success)"}}>{casos.filter(c=>c.resultadoAcuerdo==="acuerdo_vigente").length}</div>
+          </div>
+          <div>
+            <div className="small muted">Con incumplimiento</div>
+            <div style={{fontSize:"20px", fontFamily:"var(--font-display)", fontWeight:800, color:"var(--danger)"}}>{incumplidos}</div>
+          </div>
+          <div>
+            <div className="small muted">Finalizados</div>
+            <div style={{fontSize:"20px", fontFamily:"var(--font-display)", fontWeight:800}}>{finalizados.length}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============================== NUEVO CASO (WIZARD) ============================== */
+function emptyEmpresa(){ return {nombre:"", domicilio:"", localidad:"", celular:""}; }
+function emptyEntidadDeuda(){ return {nombre:"", monto:"", fechaMora:""}; }
+
+function NuevoCaso({casos, onCreate, onCancel}){
+  const [step, setStep] = useState(1);
+  const [tipo, setTipo] = useState(null);
+
+  const [f, setF] = useState({
+    fechaIngreso: TODAY,
+    numeroExpediente:"",
+    categoria:"Banco",
+    responsable:"Administrador",
+    nombre:"", dni:"", domicilio:"", localidad:"", celular:"",
+    empresas:[emptyEmpresa()],
+    descargo:"",
+    documentacion:[], docOtra:"",
+    observaciones:"", funcionario:"Administrador",
+    poseeIngresos:true, ingresoMensual:"", origenIngresos:[], otroOrigen:"", personasDependientes:"",
+    entidadesDeuda:[emptyEntidadDeuda()],
+    reclamoRealizo:false, reclamoFechaMedio:"", reclamoNumero:"",
+  });
+
+  function set(k,v){ setF(prev=>({...prev,[k]:v})); }
+  function toggleDoc(list,val,key){
+    setF(prev=>{
+      const arr = prev[key].includes(val) ? prev[key].filter(x=>x!==val) : [...prev[key], val];
+      return {...prev,[key]:arr};
+    });
+  }
+  function updEmpresa(i,patch){ setF(prev=>({...prev, empresas: prev.empresas.map((e,idx)=> idx===i?{...e,...patch}:e)})); }
+  function addEmpresa(){ setF(prev=>({...prev, empresas:[...prev.empresas, emptyEmpresa()]})); }
+  function rmEmpresa(i){ setF(prev=>({...prev, empresas: prev.empresas.filter((_,idx)=>idx!==i)})); }
+  function updDeuda(i,patch){ setF(prev=>({...prev, entidadesDeuda: prev.entidadesDeuda.map((e,idx)=> idx===i?{...e,...patch}:e)})); }
+  function addDeuda(){ setF(prev=>({...prev, entidadesDeuda:[...prev.entidadesDeuda, emptyEntidadDeuda()]})); }
+  function rmDeuda(i){ setF(prev=>({...prev, entidadesDeuda: prev.entidadesDeuda.filter((_,idx)=>idx!==i)})); }
+
+  const canNextFromType = !!tipo;
+  const canNextFromForm = f.nombre.trim() && f.dni.trim() && (tipo==="expediente" ? f.numeroExpediente.trim() : true) &&
+    (tipo==="endeudamiento" ? f.entidadesDeuda.some(e=>e.nombre.trim()) : f.empresas.some(e=>e.nombre.trim()));
+
+  function buildCaso(){
+    const seq = String(1000 + casos.length).slice(-4);
+    const prefix = tipo==="expediente" ? "EXP" : tipo==="endeudamiento" ? "END" : "EXT";
+    const id = `${prefix}-2026-0${seq}`;
+    const base = {
+      id, tipo, categoria: tipo==="endeudamiento" ? "Endeudamiento" : f.categoria,
+      fechaIngreso: f.fechaIngreso, fechaResolucion:null, responsable:f.responsable,
+      estadoOperativo:"en_gestion", resultadoAcuerdo:"sin_acuerdo",
+      denunciante:{nombre:f.nombre, dni:f.dni, domicilio:f.domicilio, localidad:f.localidad, celular:f.celular},
+      observaciones:f.observaciones, funcionario:f.funcionario, audiencias:[], casoVinculadoId:null,
+      historial:[{id:uid("h"), fecha:new Date().toISOString(), usuario:f.responsable, accion:"Ingreso de caso", estadoAnterior:null, estadoNuevo:"en_gestion", observaciones:"Caso cargado desde el sistema.", contacto:"", resultado:"", proximaAccion:"Primer contacto", fechaProximaAccion:""}],
+    };
+    if(tipo==="endeudamiento"){
+      return {...base,
+        numeroExpediente:null,
+        empresas: f.entidadesDeuda.filter(e=>e.nombre.trim()).map(e=>({nombre:e.nombre})),
+        ingresos:{posee:f.poseeIngresos, ingresoMensual:Number(f.ingresoMensual||0), origen:f.origenIngresos, otroOrigen:f.otroOrigen, personasDependientes:Number(f.personasDependientes||0)},
+        entidadesDeuda: f.entidadesDeuda.filter(e=>e.nombre.trim()).map(e=>({nombre:e.nombre, monto:Number(e.monto||0), fechaMora:e.fechaMora||TODAY})),
+        reclamosPrevios:{realizo:f.reclamoRealizo, fechaMedio:f.reclamoFechaMedio, numeroReclamo:f.reclamoNumero},
+        documentacion:f.documentacion, docOtra:f.docOtra, descargo:f.descargo,
+      };
+    }
+    return {...base,
+      numeroExpediente: tipo==="expediente" ? f.numeroExpediente : null,
+      empresas: f.empresas.filter(e=>e.nombre.trim()),
+      descargo:f.descargo, documentacion:f.documentacion, docOtra:f.docOtra, resolucionGestion:"",
+    };
+  }
+
+  return (
+    <div style={{maxWidth:"760px"}}>
+      <div className="stepper">
+        <div className={"step"+(step>1?" done":step===1?" active":"")}><span className="num">{step>1?"✓":"1"}</span>Tipo de caso</div>
+        <div className="step-line"></div>
+        <div className={"step"+(step>2?" done":step===2?" active":"")}><span className="num">{step>2?"✓":"2"}</span>Datos del caso</div>
+        <div className="step-line"></div>
+        <div className={"step"+(step===3?" active":"")}><span className="num">3</span>Confirmar</div>
+      </div>
+
+      {step===1 && (
+        <div className="card card-pad">
+          <div className="section-title" style={{marginBottom:"14px"}}>¿Qué tipo de caso vas a registrar?</div>
+          <div className="type-pick">
+            <button className={"type-card"+(tipo==="expediente"?" sel":"")} onClick={()=>setTipo("expediente")}>
+              <div className="ic" style={{background:"var(--primary-tint)", color:"var(--primary)"}}><IcGavel/></div>
+              <h4>Expediente</h4>
+              <p>Caso formal con número de expediente del sistema oficial de Defensa del Consumidor.</p>
+            </button>
+            <button className={"type-card"+(tipo==="extra_expediente"?" sel":"")} onClick={()=>setTipo("extra_expediente")}>
+              <div className="ic" style={{background:"var(--info-tint)", color:"var(--info)"}}><IcCase/></div>
+              <h4>Extra Expediente</h4>
+              <p>Gestión informal e interna de la oficina, sin número de expediente oficial.</p>
+            </button>
+            <button className={"type-card"+(tipo==="endeudamiento"?" sel":"")} onClick={()=>setTipo("endeudamiento")}>
+              <div className="ic" style={{background:"var(--accent-tint)", color:"var(--accent)"}}><IcCoin/></div>
+              <h4>Endeudamiento</h4>
+              <p>Extra Expediente especial: negociación de deuda con una o más entidades financieras.</p>
+            </button>
+          </div>
+          <div className="modal-foot" style={{padding:"22px 0 0", justifyContent:"space-between"}}>
+            <button className="btn btn-ghost" onClick={onCancel}>Cancelar</button>
+            <button className="btn btn-primary" disabled={!canNextFromType} onClick={()=>setStep(2)}>Continuar<IcChevR/></button>
+          </div>
+        </div>
+      )}
+
+      {step===2 && tipo!=="endeudamiento" && (
+        <div className="card card-pad" style={{display:"flex", flexDirection:"column", gap:"18px"}}>
+          <div className="small muted">Formulario "DCI — Expediente / Extra Expediente"</div>
+          <div className="grid cols-2">
+            <Field label="Fecha de ingreso"><input type="date" value={f.fechaIngreso} onChange={e=>set("fechaIngreso",e.target.value)}/></Field>
+            {tipo==="expediente" && <Field label="N° de Expediente" hint="Número oficial del sistema de Defensa del Consumidor"><input type="text" placeholder="Ej: 0250/2026" value={f.numeroExpediente} onChange={e=>set("numeroExpediente",e.target.value)}/></Field>}
+          </div>
+
+          <div className="divider"></div>
+          <div className="section-title small">Datos del consumidor</div>
+          <div className="grid cols-2">
+            <Field label="Nombre y apellido"><input type="text" value={f.nombre} onChange={e=>set("nombre",e.target.value)}/></Field>
+            <Field label="DNI"><input type="text" value={f.dni} onChange={e=>set("dni",e.target.value)}/></Field>
+            <Field label="Domicilio"><input type="text" value={f.domicilio} onChange={e=>set("domicilio",e.target.value)}/></Field>
+            <Field label="Localidad"><input type="text" value={f.localidad} onChange={e=>set("localidad",e.target.value)}/></Field>
+            <Field label="Celular"><input type="tel" value={f.celular} onChange={e=>set("celular",e.target.value)}/></Field>
+            <Field label="Categoría del reclamo"><select value={f.categoria} onChange={e=>set("categoria",e.target.value)}>{CATEGORIAS.map(c=><option key={c}>{c}</option>)}</select></Field>
+          </div>
+
+          <div className="divider"></div>
+          <div className="section-title small">Empresa/s o entidad/es involucrada/s</div>
+          {f.empresas.map((e,i)=>(
+            <div key={i} className="card card-pad" style={{background:"var(--surface-2)"}}>
+              <div className="grid cols-2">
+                <Field label={"Empresa o entidad "+(i+1)}><input type="text" value={e.nombre} onChange={ev=>updEmpresa(i,{nombre:ev.target.value})}/></Field>
+                <Field label="Domicilio"><input type="text" value={e.domicilio} onChange={ev=>updEmpresa(i,{domicilio:ev.target.value})}/></Field>
+                <Field label="Localidad"><input type="text" value={e.localidad} onChange={ev=>updEmpresa(i,{localidad:ev.target.value})}/></Field>
+                <Field label="Celular / teléfono"><input type="tel" value={e.celular} onChange={ev=>updEmpresa(i,{celular:ev.target.value})}/></Field>
+              </div>
+              {f.empresas.length>1 && <button className="link-btn" style={{marginTop:"10px", color:"var(--danger)"}} onClick={()=>rmEmpresa(i)}>Quitar empresa</button>}
+            </div>
+          ))}
+          <button className="btn btn-ghost btn-sm" style={{alignSelf:"flex-start"}} onClick={addEmpresa}><IcPlus/>Agregar otra empresa/entidad</button>
+
+          <div className="divider"></div>
+          <Field label="Descargo / planteo del consumidor" hint="Hechos, origen del conflicto y gestiones ya realizadas ante la empresa">
+            <textarea value={f.descargo} onChange={e=>set("descargo",e.target.value)}/>
+          </Field>
+
+          <div className="section-title small">Documentación aportada</div>
+          <div className="check-grid">
+            {DOC_OPCIONES_GENERAL.map(d=>(
+              <label className="checkline" key={d}><input type="checkbox" checked={f.documentacion.includes(d)} onChange={()=>toggleDoc(f.documentacion,d,"documentacion")}/>{d}</label>
+            ))}
+          </div>
+          <Field label="Otra documentación (opcional)"><input type="text" value={f.docOtra} onChange={e=>set("docOtra",e.target.value)}/></Field>
+
+          <div className="divider"></div>
+          <div className="grid cols-2">
+            <Field label="Responsable del caso"><select value={f.responsable} onChange={e=>set("responsable",e.target.value)}>{RESPONSABLES.map(r=><option key={r}>{r}</option>)}</select></Field>
+            <Field label="Funcionario/a interviniente"><input type="text" value={f.funcionario} onChange={e=>set("funcionario",e.target.value)}/></Field>
+          </div>
+          <Field label="Observaciones"><textarea value={f.observaciones} onChange={e=>set("observaciones",e.target.value)} style={{minHeight:"64px"}}/></Field>
+
+          <div className="modal-foot" style={{padding:"6px 0 0", justifyContent:"space-between"}}>
+            <button className="btn btn-ghost" onClick={()=>setStep(1)}><IcChevL/>Atrás</button>
+            <button className="btn btn-primary" disabled={!canNextFromForm} onClick={()=>setStep(3)}>Revisar y confirmar<IcChevR/></button>
+          </div>
+        </div>
+      )}
+
+      {step===2 && tipo==="endeudamiento" && (
+        <div className="card card-pad" style={{display:"flex", flexDirection:"column", gap:"18px"}}>
+          <div className="small muted">Formulario "DCI — Por deudas"</div>
+          <div className="grid cols-2">
+            <Field label="Fecha de ingreso"><input type="date" value={f.fechaIngreso} onChange={e=>set("fechaIngreso",e.target.value)}/></Field>
+            <Field label="Responsable del caso"><select value={f.responsable} onChange={e=>set("responsable",e.target.value)}>{RESPONSABLES.map(r=><option key={r}>{r}</option>)}</select></Field>
+          </div>
+
+          <div className="divider"></div>
+          <div className="section-title small">Datos del consumidor</div>
+          <div className="grid cols-2">
+            <Field label="Apellido y nombre"><input type="text" value={f.nombre} onChange={e=>set("nombre",e.target.value)}/></Field>
+            <Field label="DNI"><input type="text" value={f.dni} onChange={e=>set("dni",e.target.value)}/></Field>
+            <Field label="Domicilio"><input type="text" value={f.domicilio} onChange={e=>set("domicilio",e.target.value)}/></Field>
+            <Field label="Localidad"><input type="text" value={f.localidad} onChange={e=>set("localidad",e.target.value)}/></Field>
+            <Field label="Celular"><input type="tel" value={f.celular} onChange={e=>set("celular",e.target.value)}/></Field>
+          </div>
+
+          <div className="divider"></div>
+          <div className="section-title small">Situación de ingresos</div>
+          <div className="radio-cards">
+            <div className={"radio-card"+(f.poseeIngresos?" sel":"")} onClick={()=>set("poseeIngresos",true)}>Posee ingresos</div>
+            <div className={"radio-card"+(!f.poseeIngresos?" sel":"")} onClick={()=>set("poseeIngresos",false)}>No posee ingresos</div>
+          </div>
+          <div className="grid cols-2">
+            <Field label="Ingreso mensual aproximado"><input type="number" placeholder="$" value={f.ingresoMensual} onChange={e=>set("ingresoMensual",e.target.value)}/></Field>
+            <Field label="Personas que dependen de dicho ingreso"><input type="number" value={f.personasDependientes} onChange={e=>set("personasDependientes",e.target.value)}/></Field>
+          </div>
+          <div className="section-title small">Origen de los ingresos</div>
+          <div className="check-grid">
+            {ORIGEN_INGRESOS.map(o=>(
+              <label className="checkline" key={o}><input type="checkbox" checked={f.origenIngresos.includes(o)} onChange={()=>toggleDoc(f.origenIngresos,o,"origenIngresos")}/>{o}</label>
+            ))}
+          </div>
+          <Field label="Otro origen (opcional)"><input type="text" value={f.otroOrigen} onChange={e=>set("otroOrigen",e.target.value)}/></Field>
+
+          <div className="divider"></div>
+          <div className="section-title small">Entidades con las que mantiene la deuda</div>
+          <div className="hint" style={{marginTop:"-10px"}}>La fecha de mora es un campo que agregamos nosotros (no está en la ficha en papel): es necesario para calcular el tiempo de atraso y la prioridad automática — a confirmar con la oficina si prefieren cargarlo distinto.</div>
+          {f.entidadesDeuda.map((e,i)=>(
+            <div key={i} className="card card-pad" style={{background:"var(--surface-2)"}}>
+              <div className="grid cols-3">
+                <Field label="Nombre de la entidad"><input type="text" value={e.nombre} onChange={ev=>updDeuda(i,{nombre:ev.target.value})}/></Field>
+                <Field label="Monto aproximado de deuda"><input type="number" placeholder="$" value={e.monto} onChange={ev=>updDeuda(i,{monto:ev.target.value})}/></Field>
+                <Field label="Fecha desde que está en mora"><input type="date" value={e.fechaMora} onChange={ev=>updDeuda(i,{fechaMora:ev.target.value})}/></Field>
+              </div>
+              {f.entidadesDeuda.length>1 && <button className="link-btn" style={{marginTop:"10px", color:"var(--danger)"}} onClick={()=>rmDeuda(i)}>Quitar entidad</button>}
+            </div>
+          ))}
+          <button className="btn btn-ghost btn-sm" style={{alignSelf:"flex-start"}} onClick={addDeuda}><IcPlus/>Agregar otra entidad</button>
+          <div className="small" style={{fontWeight:700}}>Total aproximado de deuda: <span className="mono">{fmtMoney(f.entidadesDeuda.reduce((s,e)=>s+Number(e.monto||0),0))}</span></div>
+
+          <div className="divider"></div>
+          <Field label="Descargo / descripción de la problemática" hint="Cómo se originó, entidades involucradas, cuotas, pagos y reclamos realizados">
+            <textarea value={f.descargo} onChange={e=>set("descargo",e.target.value)}/>
+          </Field>
+
+          <div className="section-title small">Reclamos o gestiones previas</div>
+          <div className="radio-cards">
+            <div className={"radio-card"+(f.reclamoRealizo?" sel":"")} onClick={()=>set("reclamoRealizo",true)}>Sí, ya reclamó</div>
+            <div className={"radio-card"+(!f.reclamoRealizo?" sel":"")} onClick={()=>set("reclamoRealizo",false)}>No realizó reclamos</div>
+          </div>
+          {f.reclamoRealizo && (
+            <div className="grid cols-2">
+              <Field label="Fecha y medio utilizado"><input type="text" value={f.reclamoFechaMedio} onChange={e=>set("reclamoFechaMedio",e.target.value)}/></Field>
+              <Field label="N° de reclamo o gestión (si posee)"><input type="text" value={f.reclamoNumero} onChange={e=>set("reclamoNumero",e.target.value)}/></Field>
+            </div>
+          )}
+
+          <div className="section-title small">Documentación aportada</div>
+          <div className="check-grid">
+            {DOC_OPCIONES_DEUDA.map(d=>(
+              <label className="checkline" key={d}><input type="checkbox" checked={f.documentacion.includes(d)} onChange={()=>toggleDoc(f.documentacion,d,"documentacion")}/>{d}</label>
+            ))}
+          </div>
+          <Field label="Otra documentación (opcional)"><input type="text" value={f.docOtra} onChange={e=>set("docOtra",e.target.value)}/></Field>
+
+          <Field label="Observaciones (uso interno)"><textarea value={f.observaciones} onChange={e=>set("observaciones",e.target.value)} style={{minHeight:"64px"}}/></Field>
+
+          <div className="modal-foot" style={{padding:"6px 0 0", justifyContent:"space-between"}}>
+            <button className="btn btn-ghost" onClick={()=>setStep(1)}><IcChevL/>Atrás</button>
+            <button className="btn btn-primary" disabled={!canNextFromForm} onClick={()=>setStep(3)}>Revisar y confirmar<IcChevR/></button>
+          </div>
+        </div>
+      )}
+
+      {step===3 && (
+        <div className="card card-pad" style={{display:"flex", flexDirection:"column", gap:"14px"}}>
+          <div className="section-title">Confirmar creación del caso</div>
+          <div className="grid cols-2">
+            <div><div className="small muted">Tipo de caso</div><div style={{fontWeight:700}}><TipoBadge tipo={tipo}/></div></div>
+            <div><div className="small muted">Fecha de ingreso</div><div style={{fontWeight:700}}>{fmtDate(f.fechaIngreso)}</div></div>
+            <div><div className="small muted">Consumidor</div><div style={{fontWeight:700}}>{f.nombre} (DNI {f.dni})</div></div>
+            <div><div className="small muted">Responsable</div><div style={{fontWeight:700}}>{f.responsable}</div></div>
+            {tipo==="expediente" && <div><div className="small muted">N° de expediente</div><div style={{fontWeight:700}} className="mono">{f.numeroExpediente}</div></div>}
+            <div>
+              <div className="small muted">{tipo==="endeudamiento" ? "Entidades" : "Empresa/s"}</div>
+              <div style={{fontWeight:700}}>{tipo==="endeudamiento" ? f.entidadesDeuda.filter(e=>e.nombre).map(e=>e.nombre).join(", ") : f.empresas.filter(e=>e.nombre).map(e=>e.nombre).join(", ")}</div>
+            </div>
+          </div>
+          {tipo==="endeudamiento" && (
+            <div className="card card-pad" style={{background:"var(--accent-tint)", borderColor:"transparent"}}>
+              <div className="small" style={{fontWeight:700, color:"var(--accent)"}}>Deuda total aproximada: {fmtMoney(f.entidadesDeuda.reduce((s,e)=>s+Number(e.monto||0),0))}</div>
+              <div className="small muted" style={{marginTop:"3px"}}>El caso ingresará a la pantalla especial de Endeudamiento y su prioridad se calculará automáticamente.</div>
+            </div>
+          )}
+          <div className="modal-foot" style={{padding:"6px 0 0", justifyContent:"space-between"}}>
+            <button className="btn btn-ghost" onClick={()=>setStep(2)}><IcChevL/>Atrás</button>
+            <button className="btn btn-accent" onClick={()=>onCreate(buildCaso())}><IcCheck/>Crear caso</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ============================== FICHA DE CASO ============================== */
+function ModalCambioEstado({caso, onClose, onSave}){
+  const [operativo, setOperativo] = useState(caso.estadoOperativo);
+  const [resultado, setResultado] = useState(caso.resultadoAcuerdo);
+  const [obs, setObs] = useState("");
+  const [momentoResolucion, setMomentoResolucion] = useState(caso.resolucionMomento || "antes_audiencia");
+  const [numeroAudiencia, setNumeroAudiencia] = useState("");
+
+  const necesitaAudiencia = caso.tipo==="expediente" && (resultado==="acuerdo_cumplido" || operativo==="cerrado") && momentoResolucion==="audiencia";
+
+  return (
+    <Modal title="Cambiar estado del caso" onClose={onClose} foot={
+      <>
+        <button className="btn btn-ghost" onClick={onClose}>Cancelar</button>
+        <button className="btn btn-primary" onClick={()=>onSave({operativo,resultado,obs,momentoResolucion,numeroAudiencia})}>Guardar cambio</button>
+      </>
+    }>
+      <Field label="Estado operativo">
+        <select value={operativo} onChange={e=>setOperativo(e.target.value)}>
+          <option value="en_gestion">En gestión</option>
+          <option value="cerrado">Cerrado</option>
+        </select>
+      </Field>
+      <Field label="Resultado del acuerdo">
+        <select value={resultado} onChange={e=>setResultado(e.target.value)}>
+          <option value="sin_acuerdo">Sin acuerdo aún</option>
+          <option value="acuerdo_vigente">Acuerdo exitoso (vigente)</option>
+          <option value="acuerdo_cumplido">Finalizado — acuerdo cumplido</option>
+          <option value="incumplido_denunciante">Incumplimiento del denunciante</option>
+          <option value="incumplido_denunciado">Incumplimiento del denunciado</option>
+          <option value="rechazado">No corresponde a la DCI</option>
+        </select>
+      </Field>
+      {caso.tipo==="expediente" && (resultado==="acuerdo_cumplido") && (
+        <Field label="¿Cómo se resolvió?">
+          <div className="radio-cards">
+            <div className={"radio-card"+(momentoResolucion==="antes_audiencia"?" sel":"")} onClick={()=>setMomentoResolucion("antes_audiencia")}>Antes de audiencia</div>
+            <div className={"radio-card"+(momentoResolucion==="audiencia"?" sel":"")} onClick={()=>setMomentoResolucion("audiencia")}>En audiencia</div>
+          </div>
+        </Field>
+      )}
+      {necesitaAudiencia && (
+        <Field label="Número de expediente de audiencia" hint="El número original y el de audiencia conviven; se podrá buscar el caso por ambos.">
+          <input type="text" value={numeroAudiencia} onChange={e=>setNumeroAudiencia(e.target.value)} placeholder="Ej: AUD-0142-A"/>
+        </Field>
+      )}
+      <Field label="Observaciones del cambio"><textarea value={obs} onChange={e=>setObs(e.target.value)}/></Field>
+    </Modal>
+  );
+}
+
+function ModalGestion({onClose, onSave}){
+  const [accion, setAccion] = useState("Contacto realizado");
+  const [contacto, setContacto] = useState("Teléfono");
+  const [resultado, setResultado] = useState("");
+  const [obs, setObs] = useState("");
+  const [proximaAccion, setProximaAccion] = useState("");
+  const [fechaProxima, setFechaProxima] = useState("");
+  return (
+    <Modal title="Registrar gestión / movimiento" onClose={onClose} foot={
+      <>
+        <button className="btn btn-ghost" onClick={onClose}>Cancelar</button>
+        <button className="btn btn-primary" onClick={()=>onSave({accion,contacto,resultado,obs,proximaAccion,fechaProxima})}>Guardar gestión</button>
+      </>
+    }>
+      <div className="grid cols-2">
+        <Field label="Acción realizada">
+          <select value={accion} onChange={e=>setAccion(e.target.value)}>
+            <option>Contacto realizado</option>
+            <option>Envío de documentación</option>
+            <option>Notificación / cédula enviada</option>
+            <option>Audiencia realizada</option>
+            <option>Llamado sin respuesta</option>
+            <option>Otro</option>
+          </select>
+        </Field>
+        <Field label="Medio de contacto">
+          <select value={contacto} onChange={e=>setContacto(e.target.value)}>
+            <option>Teléfono</option><option>Email</option><option>Presencial</option><option>Cédula / correo postal</option><option>WhatsApp</option>
+          </select>
+        </Field>
+      </div>
+      <Field label="Resultado obtenido"><input type="text" value={resultado} onChange={e=>setResultado(e.target.value)}/></Field>
+      <Field label="Observaciones"><textarea value={obs} onChange={e=>setObs(e.target.value)}/></Field>
+      <div className="grid cols-2">
+        <Field label="Próxima acción"><input type="text" value={proximaAccion} onChange={e=>setProximaAccion(e.target.value)}/></Field>
+        <Field label="Fecha de próxima acción"><input type="date" value={fechaProxima} onChange={e=>setFechaProxima(e.target.value)}/></Field>
+      </div>
+    </Modal>
+  );
+}
+
+function ModalVincular({caso, onClose, onCreate}){
+  const [numeroExpediente, setNumeroExpediente] = useState("");
+  return (
+    <Modal title="Crear Expediente vinculado" onClose={onClose} foot={
+      <>
+        <button className="btn btn-ghost" onClick={onClose}>Cancelar</button>
+        <button className="btn btn-primary" disabled={!numeroExpediente.trim()} onClick={()=>onCreate(numeroExpediente)}>Crear expediente vinculado</button>
+      </>
+    }>
+      <p className="small muted">Este Extra Expediente no logró resolverse por vía directa. Se creará un caso nuevo de tipo Expediente, vinculado a este, conservando los datos del consumidor y el historial de gestión ya realizado.</p>
+      <Field label="Número de expediente oficial"><input type="text" value={numeroExpediente} onChange={e=>setNumeroExpediente(e.target.value)} placeholder="Ej: 0300/2026"/></Field>
+    </Modal>
+  );
+}
+
+function FichaCaso({caso, casos, onUpdate, onAddHistorial, onCreateLinked, go, notify}){
+  const [tab, setTab] = useState("general");
+  const [showEstado, setShowEstado] = useState(false);
+  const [showGestion, setShowGestion] = useState(false);
+  const [showVincular, setShowVincular] = useState(false);
+
+  const vinculado = caso.casoVinculadoId ? casos.find(c=>c.id===caso.casoVinculadoId) : null;
+  const stats = caso.tipo==="endeudamiento" ? casoStats(caso) : null;
+  const canReabrir = caso.estadoOperativo==="cerrado";
+
+  function handleCambioEstado({operativo,resultado,obs,momentoResolucion,numeroAudiencia}){
+    const entry = {id:uid("h"), fecha:new Date().toISOString(), usuario:"Administrador", accion:"Cambio de estado", estadoAnterior:caso.resultadoAcuerdo, estadoNuevo:resultado, observaciones:obs, contacto:"", resultado:"", proximaAccion:"", fechaProximaAccion:""};
+    let patch = {estadoOperativo:operativo, resultadoAcuerdo:resultado};
+    if(resultado==="acuerdo_cumplido" && caso.fechaResolucion==null){ patch.fechaResolucion = TODAY; }
+    if(caso.tipo==="expediente" && resultado==="acuerdo_cumplido"){
+      patch.resolucionMomento = momentoResolucion;
+      if(momentoResolucion==="audiencia" && numeroAudiencia.trim()){
+        patch.audiencias = [...(caso.audiencias||[]), {numero:numeroAudiencia.trim(), fecha:TODAY}];
+      }
+    }
+    onUpdate(caso.id, patch);
+    onAddHistorial(caso.id, entry);
+    setShowEstado(false);
+    notify("Estado actualizado");
+  }
+
+  function handleGestion(g){
+    const entry = {id:uid("h"), fecha:new Date().toISOString(), usuario:"Administrador", accion:g.accion, estadoAnterior:caso.resultadoAcuerdo, estadoNuevo:caso.resultadoAcuerdo, observaciones:g.obs, contacto:g.contacto, resultado:g.resultado, proximaAccion:g.proximaAccion, fechaProximaAccion:g.fechaProxima};
+    onAddHistorial(caso.id, entry);
+    setShowGestion(false);
+    notify("Gestión registrada");
+  }
+
+  function handleReabrir(){
+    const entry = {id:uid("h"), fecha:new Date().toISOString(), usuario:"Administrador", accion:"Reapertura de caso", estadoAnterior:caso.resultadoAcuerdo, estadoNuevo:"en_gestion", observaciones:"Caso reabierto para nueva gestión.", contacto:"", resultado:"", proximaAccion:"", fechaProximaAccion:""};
+    onUpdate(caso.id, {estadoOperativo:"en_gestion"});
+    onAddHistorial(caso.id, entry);
+    notify("Caso reabierto");
+  }
+
+  function handleVincular(numeroExpediente){
+    const nuevoId = "EXP-2026-0"+String(1000+casos.length).slice(-4);
+    const nuevo = {
+      ...caso, id:nuevoId, tipo:"expediente", numeroExpediente, fechaIngreso:TODAY, fechaResolucion:null,
+      estadoOperativo:"en_gestion", resultadoAcuerdo:"sin_acuerdo", casoVinculadoId:caso.id, audiencias:[],
+      historial:[{id:uid("h"), fecha:new Date().toISOString(), usuario:"Administrador", accion:"Ingreso de caso", estadoAnterior:null, estadoNuevo:"en_gestion", observaciones:"Caso creado a partir del Extra Expediente "+caso.id+" al no lograr resolución directa.", contacto:"", resultado:"", proximaAccion:"", fechaProximaAccion:""}],
+    };
+    onUpdate(caso.id, {casoVinculadoId:nuevoId, estadoOperativo:"cerrado"});
+    onCreateLinked(nuevo);
+    setShowVincular(false);
+    go("detail",{id:nuevoId});
+  }
+
+  return (
+    <div>
+      <div className="breadcrumb"><button onClick={()=>go("list")}>Bandeja de casos</button> <IcChevR style={{width:11,height:11}}/> <span>{caso.id}</span></div>
+
+      <div className="card card-pad" style={{marginBottom:"18px"}}>
+        <div style={{display:"flex", justifyContent:"space-between", alignItems:"flex-start", flexWrap:"wrap", gap:"14px"}}>
+          <div>
+            <div style={{display:"flex", alignItems:"center", gap:"10px", flexWrap:"wrap"}}>
+              <h2 style={{fontSize:"20px"}}>{caso.numeroExpediente || caso.id}</h2>
+              <TipoBadge tipo={caso.tipo}/>
+              <EstadoBadge caso={caso}/>
+            </div>
+            <div className="small muted" style={{marginTop:"4px"}}>
+              {caso.id!==caso.numeroExpediente && caso.numeroExpediente && <span className="mono">{caso.id} · </span>}
+              {caso.denunciante.nombre} · DNI {caso.denunciante.dni} · Ingresado el {fmtDate(caso.fechaIngreso)} · Responsable: {caso.responsable}
+            </div>
+            {caso.audiencias && caso.audiencias.length>0 && (
+              <div style={{marginTop:"8px", display:"flex", gap:"6px", flexWrap:"wrap"}}>
+                {caso.audiencias.map((a,i)=>(<Badge tone="b-primary" key={i}><IcGavel/> Audiencia: {a.numero} ({fmtDate(a.fecha)})</Badge>))}
+              </div>
+            )}
+            {vinculado && (
+              <div style={{marginTop:"8px"}}>
+                <button className="link-btn" onClick={()=>go("detail",{id:vinculado.id})} style={{display:"inline-flex", alignItems:"center", gap:"5px"}}>
+                  <IcLink style={{width:12,height:12}}/> Caso vinculado: {vinculado.id} ({TIPOS[vinculado.tipo]})
+                </button>
+              </div>
+            )}
+          </div>
+          <div style={{display:"flex", gap:"8px", flexWrap:"wrap"}}>
+            {caso.tipo==="extra_expediente" && !caso.casoVinculadoId && caso.estadoOperativo==="en_gestion" && (
+              <button className="btn btn-sm" onClick={()=>setShowVincular(true)}><IcLink/>Vincular a Expediente</button>
+            )}
+            {canReabrir && <button className="btn btn-sm" onClick={handleReabrir}><IcRotate/>Reabrir caso</button>}
+            <button className="btn btn-sm" onClick={()=>setShowGestion(true)}><IcPlus/>Registrar gestión</button>
+            <button className="btn btn-primary btn-sm" onClick={()=>setShowEstado(true)}><IcFlag/>Cambiar estado</button>
+          </div>
+        </div>
+
+        {caso.tipo==="endeudamiento" && stats && (
+          <div className="grid cols-3" style={{marginTop:"18px"}}>
+            <div className="card card-pad" style={{background:"var(--surface-2)"}}>
+              <div className="small muted">Deuda total</div>
+              <div className="mono" style={{fontSize:"18px", fontWeight:800}}>{fmtMoney(stats.montoTotal)}</div>
+            </div>
+            <div className="card card-pad" style={{background:"var(--surface-2)"}}>
+              <div className="small muted">Atraso máximo</div>
+              <div className="mono" style={{fontSize:"18px", fontWeight:800}}>{stats.atrasoMax} días</div>
+            </div>
+            <div className="card card-pad" style={{background:"var(--surface-2)"}}>
+              <div className="small muted">Ingreso mensual declarado</div>
+              <div className="mono" style={{fontSize:"18px", fontWeight:800}}>{caso.ingresos ? fmtMoney(caso.ingresos.ingresoMensual) : "—"}</div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="tabs">
+        <button className={"tab"+(tab==="general"?" active":"")} onClick={()=>setTab("general")}>Datos generales</button>
+        {caso.tipo==="endeudamiento" && <button className={"tab"+(tab==="deuda"?" active":"")} onClick={()=>setTab("deuda")}>Situación de deuda</button>}
+        <button className={"tab"+(tab==="doc"?" active":"")} onClick={()=>setTab("doc")}>Documentación</button>
+        <button className={"tab"+(tab==="historial"?" active":"")} onClick={()=>setTab("historial")}>Historial de gestiones</button>
+      </div>
+
+      {tab==="general" && (
+        <div className="grid cols-2">
+          <div className="card card-pad">
+            <div className="section-title" style={{marginBottom:"12px"}}><IcUsers/> Consumidor</div>
+            <DL rows={[["Nombre y apellido",caso.denunciante.nombre],["DNI",caso.denunciante.dni],["Domicilio",caso.denunciante.domicilio||"—"],["Localidad",caso.denunciante.localidad||"—"],["Celular",caso.denunciante.celular||"—"]]}/>
+          </div>
+          <div className="card card-pad">
+            <div className="section-title" style={{marginBottom:"12px"}}><IcBuilding/> {caso.tipo==="endeudamiento" ? "Entidades involucradas" : "Empresa/s involucrada/s"}</div>
+            {(caso.empresas||[]).map((e,i)=>(
+              <div key={i} style={{padding:"9px 0", borderBottom: i<caso.empresas.length-1 ? "1px solid var(--border)":"none"}}>
+                <div style={{fontWeight:700, fontSize:"13px"}}>{e.nombre}</div>
+                {e.domicilio && <div className="small muted">{e.domicilio}{e.localidad?", "+e.localidad:""}</div>}
+                {e.celular && <div className="small muted mono">{e.celular}</div>}
+              </div>
+            ))}
+          </div>
+          <div className="card card-pad" style={{gridColumn:"1 / -1"}}>
+            <div className="section-title" style={{marginBottom:"10px"}}>Descargo / planteo del consumidor</div>
+            <p className="small" style={{lineHeight:1.6, color:"var(--text-muted)"}}>{caso.descargo || "Sin descripción cargada."}</p>
+          </div>
+          {caso.resolucionGestion && (
+            <div className="card card-pad" style={{gridColumn:"1 / -1", background:"var(--success-tint)", border:"none"}}>
+              <div className="section-title" style={{marginBottom:"8px", color:"var(--success)"}}>Resolución / resultado de la gestión</div>
+              <p className="small" style={{lineHeight:1.6}}>{caso.resolucionGestion}</p>
+            </div>
+          )}
+          {caso.observaciones && (
+            <div className="card card-pad" style={{gridColumn:"1 / -1"}}>
+              <div className="section-title" style={{marginBottom:"8px"}}>Observaciones</div>
+              <p className="small muted" style={{lineHeight:1.6}}>{caso.observaciones}</p>
+              {caso.funcionario && <div className="small muted" style={{marginTop:"6px"}}>Funcionario/a interviniente: <b style={{color:"var(--text)"}}>{caso.funcionario}</b></div>}
+            </div>
+          )}
+        </div>
+      )}
+
+      {tab==="deuda" && caso.tipo==="endeudamiento" && (
+        <div className="grid cols-2">
+          <div className="card card-pad">
+            <div className="section-title" style={{marginBottom:"12px"}}>Situación de ingresos</div>
+            <DL rows={[
+              ["¿Posee ingresos?", caso.ingresos.posee ? "Sí" : "No"],
+              ["Ingreso mensual aproximado", fmtMoney(caso.ingresos.ingresoMensual)],
+              ["Origen de los ingresos", (caso.ingresos.origen||[]).join(", ")||"—"],
+              ["Personas que dependen del ingreso", String(caso.ingresos.personasDependientes)],
+            ]}/>
+          </div>
+          <div className="card card-pad">
+            <div className="section-title" style={{marginBottom:"12px"}}>Reclamos o gestiones previas</div>
+            <DL rows={[
+              ["¿Realizó reclamos previos?", caso.reclamosPrevios.realizo ? "Sí" : "No"],
+              ["Fecha y medio utilizado", caso.reclamosPrevios.fechaMedio || "—"],
+              ["N° de reclamo o gestión", caso.reclamosPrevios.numeroReclamo || "—"],
+            ]}/>
+          </div>
+          <div className="card card-pad" style={{gridColumn:"1 / -1"}}>
+            <div className="section-title" style={{marginBottom:"12px"}}>Entidades con las que mantiene la deuda</div>
+            <div className="table-wrap">
+              <table>
+                <thead><tr><th>Entidad</th><th>Monto aproximado</th><th>En mora desde</th><th>Días de atraso</th></tr></thead>
+                <tbody>
+                  {caso.entidadesDeuda.map((e,i)=>(
+                    <tr key={i} style={{cursor:"default"}}>
+                      <td className="cell-strong">{e.nombre}</td>
+                      <td className="mono">{fmtMoney(e.monto)}</td>
+                      <td className="mono">{fmtDate(e.fechaMora)}</td>
+                      <td className="mono">{daysBetween(e.fechaMora, TODAY)} días</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {tab==="doc" && (
+        <div className="card card-pad">
+          <div className="section-title" style={{marginBottom:"12px"}}>Documentación aportada</div>
+          {(caso.documentacion||[]).length===0 && !caso.docOtra ? (
+            <div className="empty-state"><IcPaperclip/><div>No se cargó documentación para este caso.</div></div>
+          ) : (
+            <div style={{display:"flex", flexDirection:"column", gap:"9px"}}>
+              {(caso.documentacion||[]).map(d=>(
+                <div key={d} style={{display:"flex", alignItems:"center", gap:"9px", fontSize:"13px"}}>
+                  <span style={{color:"var(--success)"}}><IcCheck style={{width:15,height:15}}/></span>{d}
+                </div>
+              ))}
+              {caso.docOtra && <div style={{display:"flex", alignItems:"center", gap:"9px", fontSize:"13px"}}><span style={{color:"var(--success)"}}><IcCheck style={{width:15,height:15}}/></span>Otra: {caso.docOtra}</div>}
+            </div>
+          )}
+        </div>
+      )}
+
+      {tab==="historial" && (
+        <div className="card card-pad">
+          <div className="section-head">
+            <div className="section-title">Historial de gestiones</div>
+            <button className="btn btn-sm btn-primary" onClick={()=>setShowGestion(true)}><IcPlus/>Registrar gestión</button>
+          </div>
+          <div className="timeline">
+            {[...caso.historial].reverse().map(h=>(
+              <div className="tl-item" key={h.id}>
+                <div className="tl-dot"></div>
+                <div className="tl-head"><span className="tl-title">{h.accion}</span><span className="tl-date">{fmtDateTime(h.fecha)}</span></div>
+                {h.observaciones && <div className="tl-body">{h.observaciones}</div>}
+                <div className="tl-meta">
+                  <span><b>Usuario:</b> {h.usuario}</span>
+                  {h.contacto && <span><b>Contacto:</b> {h.contacto}</span>}
+                  {h.resultado && <span><b>Resultado:</b> {h.resultado}</span>}
+                  {h.estadoAnterior!==h.estadoNuevo && h.estadoAnterior && <span><b>Estado:</b> {(RESULTADO_LABEL[h.estadoAnterior]||{}).label} → {(RESULTADO_LABEL[h.estadoNuevo]||{}).label}</span>}
+                  {h.proximaAccion && <span><b>Próxima acción:</b> {h.proximaAccion} {h.fechaProximaAccion?`(${fmtDate(h.fechaProximaAccion)})`:""}</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {showEstado && <ModalCambioEstado caso={caso} onClose={()=>setShowEstado(false)} onSave={handleCambioEstado}/>}
+      {showGestion && <ModalGestion onClose={()=>setShowGestion(false)} onSave={handleGestion}/>}
+      {showVincular && <ModalVincular caso={caso} onClose={()=>setShowVincular(false)} onCreate={handleVincular}/>}
+    </div>
+  );
+}
+
+function DL({rows}){
+  return (
+    <div style={{display:"flex", flexDirection:"column", gap:"9px"}}>
+      {rows.map(([k,v],i)=>(
+        <div key={i} style={{display:"flex", justifyContent:"space-between", gap:"12px", fontSize:"13px"}}>
+          <span className="muted">{k}</span><span style={{fontWeight:700, textAlign:"right"}}>{v}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ============================== CONFIGURACIÓN ============================== */
+function Configuracion({weights, setWeights, theme, setTheme}){
+  return (
+    <div style={{display:"flex", flexDirection:"column", gap:"18px", maxWidth:"680px"}}>
+      <div className="card card-pad">
+        <div className="section-title" style={{marginBottom:"10px"}}><IcUsers/> Roles y permisos</div>
+        <p className="small muted">Por ahora el sistema funciona con un único rol: <b style={{color:"var(--text)"}}>Administrador</b>, con acceso completo a todos los casos. La estructura está preparada para agregar roles con permisos más acotados en el futuro (por ejemplo, un rol que solo pueda gestionar sus propios casos asignados, o un rol de Dirección de solo lectura sobre estadísticas).</p>
+        <div style={{marginTop:"12px", display:"flex", flexDirection:"column", gap:"8px"}}>
+          {[{n:"Administrador", d:"Acceso total (activo)", on:true},{n:"Gestor de casos", d:"Editaría solo sus casos asignados — a definir", on:false},{n:"Dirección (solo lectura)", d:"Vería estadísticas y dashboard sin editar — a definir", on:false}].map(r=>(
+            <div key={r.n} style={{display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 12px", border:"1px solid var(--border)", borderRadius:"var(--radius-sm)", background: r.on ? "var(--primary-tint)":"var(--surface-2)"}}>
+              <div>
+                <div style={{fontWeight:700, fontSize:"13px"}}>{r.n}</div>
+                <div className="small muted">{r.d}</div>
+              </div>
+              <Badge tone={r.on?"b-success":"b-neutral"}>{r.on?"Activo":"Próximamente"}</Badge>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="card card-pad">
+        <div className="section-title" style={{marginBottom:"10px"}}>Apariencia</div>
+        <div className="radio-cards">
+          <div className={"radio-card"+(theme==="system"?" sel":"")} onClick={()=>setTheme("system")}>Automático</div>
+          <div className={"radio-card"+(theme==="light"?" sel":"")} onClick={()=>setTheme("light")}>Claro</div>
+          <div className={"radio-card"+(theme==="dark"?" sel":"")} onClick={()=>setTheme("dark")}>Oscuro</div>
+        </div>
+      </div>
+
+      <div className="card card-pad">
+        <div className="section-title" style={{marginBottom:"6px"}}>Sobre esta demo</div>
+        <p className="small muted" style={{lineHeight:1.6}}>
+          Esta es una demo de <b>solo frontend</b>, pensada para mostrar el funcionamiento propuesto a la oficina.
+          Los datos son de ejemplo y se guardan únicamente en este navegador (no hay servidor ni base de datos real todavía).
+          Varios criterios acá reflejados — como la fórmula de prioridad de endeudamiento o el listado de categorías — quedan
+          <b> a confirmar con la oficina</b> antes de pasar a una versión de producción.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/* ============================== MOUNT ============================== */
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<App/>);
+</script>
